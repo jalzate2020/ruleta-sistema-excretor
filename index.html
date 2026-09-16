@@ -955,7 +955,7 @@
       setRoster(normalize(list));
       namesInput.value = names.join("\n");
       render();
-      updateTally();
+      updateScores();
     }
   };
 })();
@@ -992,22 +992,37 @@
       .then(function(buf){ return JSON.parse(new TextDecoder().decode(buf)); });
   }
 
+  function reveal(list){
+    window.__ruleta.load(list);
+    document.body.classList.remove("locked");
+    gate.parentNode.removeChild(gate);
+  }
+
+  function wrongPassword(){
+    btn.disabled = false;
+    btn.textContent = "Enter";
+    err.textContent = "Wrong password. Please try again.";
+    err.hidden = false;
+    pass.focus();
+    pass.select();
+  }
+
+  // A failure to decrypt means a wrong password. A failure AFTER decrypting
+  // is a bug in this page, and must never be reported as a wrong password.
+  function showBug(e){
+    btn.disabled = false;
+    btn.textContent = "Enter";
+    err.textContent = "The password was correct, but this page failed to load the list: " +
+      ((e && e.message) || e);
+    err.hidden = false;
+  }
+
   form.addEventListener("submit", function(e){
     e.preventDefault();
     err.hidden = true;
     btn.disabled = true;
-    btn.textContent = "Comprobando\u2026";
-    unlock(pass.value).then(function(list){
-      window.__ruleta.load(list);
-      document.body.classList.remove("locked");
-      gate.parentNode.removeChild(gate);
-    }).catch(function(){
-      btn.disabled = false;
-      btn.textContent = "Entrar";
-      err.hidden = false;
-      pass.focus();
-      pass.select();
-    });
+    btn.textContent = "Checking\u2026";
+    unlock(pass.value).then(reveal, wrongPassword).catch(showBug);
   });
 
   pass.focus();
