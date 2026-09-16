@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Ruleta de turnos con preguntas sobre la estructura del sistema excretor.">
+<meta name="description" content="Turn-taking wheel with questions on the structure of the excretory system.">
 <style>
   :root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   body{margin:0}
   img{max-width:100%}
   [hidden]{display:none!important}
 </style>
-<title>Ruleta del Sistema Excretor</title>
+<title>Excretory System Wheel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -93,10 +93,8 @@
     margin:0;text-wrap:balance;
   }
   h1 em{font-style:normal;color:var(--crimson)}
-  .masthead p{margin:6px 0 0;color:var(--muted);max-width:44ch;font-size:15px}
-  .tally{
-    margin-left:auto;text-align:right;font-family:"IBM Plex Mono",monospace;
-  }
+  .masthead p{margin:6px 0 0;color:var(--muted);max-width:46ch;font-size:15px}
+  .tally{margin-left:auto;text-align:right;font-family:"IBM Plex Mono",monospace}
   .tally b{display:block;font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
   .tally span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
@@ -132,7 +130,7 @@
   }
   .ghost:hover{border-color:var(--ink);color:var(--ink)}
   .ghost:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .seg{display:flex;flex:2 1 auto;gap:-1px}
+  .seg{display:flex;flex:2 1 auto}
   .seg .ghost{flex:1 1 0;border-radius:0}
   .seg .ghost:first-child{border-radius:2px 0 0 2px}
   .seg .ghost:last-child{border-radius:0 2px 2px 0}
@@ -182,47 +180,64 @@
   }
   .qhead span{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.08em}
 
-  ol.qs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
-  ol.qs li{
-    display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 16px;
-    background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:16px 18px
+  /* ---------- flip card ---------- */
+  .card{perspective:1600px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .card:focus-visible{outline:3px solid var(--focus);outline-offset:4px;border-radius:2px}
+  .card-inner{
+    display:grid;position:relative;transform-style:preserve-3d;
+    transition:transform .75s cubic-bezier(.45,.05,.2,1)
   }
-  .num{
-    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--amber);
-    font-variant-numeric:tabular-nums;padding-top:2px
+  .card.flipped .card-inner{transform:rotateY(180deg)}
+  .face{
+    grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:flex;flex-direction:column;gap:14px;min-height:210px;
+    border:1px solid var(--line);border-radius:2px;padding:22px 24px;box-shadow:var(--shadow)
   }
-  .q{font-size:17px;font-weight:500;margin:0;line-height:1.4;text-wrap:pretty}
-  .reveal{
-    grid-column:2;justify-self:start;margin-top:10px;background:none;border:0;padding:0;cursor:pointer;
-    font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
-    color:var(--teal);border-bottom:1px solid currentColor
+  .face-q{background:var(--surface);border-top:4px solid var(--amber)}
+  .face-a{background:var(--surface-2);border-top:4px solid var(--teal);transform:rotateY(180deg)}
+  .tag{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center
   }
-  .reveal:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
-  .a{
-    grid-column:2;margin:10px 0 0;padding:12px 14px;background:var(--surface-2);
-    border-left:2px solid var(--teal);font-size:15.5px;color:var(--ink);line-height:1.45
+  .tag .part{color:var(--amber);font-weight:600}
+  .face-a .tag .part{color:var(--teal)}
+  .tag .by{color:var(--muted)}
+  .prompt{
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:600;
+    font-size:clamp(21px,3.1vw,28px);line-height:1.22;letter-spacing:-.01em;margin:0;
+    flex:1;text-wrap:pretty
   }
-  .a b{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--teal);display:block;margin-bottom:3px;font-weight:600}
+  .flip-hint{
+    margin:0;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px
+  }
+  .flip-hint::before{content:"";width:16px;height:1px;background:currentColor}
+  .empty{
+    border:1px dashed var(--line);border-radius:2px;padding:34px 24px;margin:0;
+    color:var(--muted);text-align:center;font-size:15px
+  }
 
-  .diagram{
-    margin-top:36px;padding-top:20px;border-top:1px solid var(--line)
-  }
+  /* ---------- diagram ---------- */
+  .diagram{margin-top:36px;padding-top:20px;border-top:1px solid var(--line)}
   .diagram h2{
     font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--muted);margin:0 0 14px
   }
-  .route{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .route{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
   .route .stop{
-    background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:7px 12px;
-    font-size:13.5px;font-weight:500
+    background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:9px 13px;
+    font-size:14px;font-weight:600
   }
-  .route .stop small{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .route .arrow{color:var(--amber);font-weight:700}
+  .route .stop small{
+    display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-top:2px
+  }
+  .route .arrow{color:var(--amber);font-weight:700;align-self:center}
 
-  footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
-    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+  footer{
+    margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--muted)
+  }
 
 
   body.locked{overflow:hidden}
@@ -245,34 +260,36 @@
   .gate-error{margin:0;color:var(--crimson);font-size:13.5px;font-weight:500}
   .gate-note{margin:0;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
 
-  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
 </style>
 
 </head>
 <body class="locked">
 <div class="gate" id="gate">
   <form class="gate-card" id="gate-form">
-    <p class="eyebrow">Acceso a la clase</p>
-    <h2>Ruleta del Sistema Excretor</h2>
-    <p class="lead">Escribe la clave de la clase para cargar la lista de estudiantes.</p>
+    <p class="eyebrow">Class access</p>
+    <h2>Excretory System Wheel</h2>
+    <p class="lead">Enter the class password to load the student list.</p>
     <input type="password" id="gate-pass" autocomplete="current-password"
-           placeholder="Clave de la clase" aria-label="Clave de la clase" required>
-    <button type="submit" id="gate-go">Entrar</button>
-    <p class="gate-error" id="gate-error" hidden>Clave incorrecta. Intenta de nuevo.</p>
-    <p class="gate-note">La lista viaja cifrada dentro de la p&aacute;gina. Sin la clave no se puede leer.</p>
+           placeholder="Class password" aria-label="Class password" required>
+    <button type="submit" id="gate-go">Enter</button>
+    <p class="gate-error" id="gate-error" hidden>Wrong password. Please try again.</p>
+    <p class="gate-note">The student list travels encrypted inside this page. Without the password it cannot be read.</p>
   </form>
 </div>
 
 <div class="wrap">
   <header class="masthead">
     <div>
-      <p class="eyebrow">Ciencias Naturales · Grado 5.º</p>
-      <h1>Ruleta del <em>Sistema Excretor</em></h1>
-      <p>Gira la ruleta, sale un estudiante y aparecen sus 4 preguntas sobre la estructura del sistema excretor.</p>
+      <p class="eyebrow">Natural Science · Grade 5</p>
+      <h1>Excretory System <em>Wheel</em></h1>
+      <p>Spin the wheel to pick a student. One question appears, taken from the four parts the presenters explain. Tap the card to turn it over and check the answer.</p>
     </div>
     <div class="tally">
       <b id="tally-num">25</b>
-      <span>por pasar</span>
+      <span>left to go</span>
     </div>
   </header>
 
@@ -280,57 +297,72 @@
     <section class="wheel-col">
       <div class="wheel-box">
         <div class="needle"></div>
-        <canvas id="wheel" tabindex="0" role="button" aria-label="Ruleta de estudiantes. Presiona para girar."></canvas>
+        <canvas id="wheel" tabindex="0" role="button" aria-label="Student wheel. Activate to spin."></canvas>
       </div>
-      <button class="spin" id="spin">Girar la ruleta</button>
+      <button class="spin" id="spin">Spin the wheel</button>
       <div class="toolbar">
-        <button class="ghost" id="reset">Reiniciar turnos</button>
-        <button class="ghost" id="shuffle-qs">Barajar preguntas</button>
+        <button class="ghost" id="reset">Reset turns</button>
+        <button class="ghost" id="shuffle-qs">Shuffle questions</button>
       </div>
       <div class="toolbar">
-        <div class="seg" role="group" aria-label="Duración del giro">
+        <div class="seg" role="group" aria-label="Spin length">
           <button class="ghost dur" id="dur-10" data-ms="10000" aria-pressed="false">10 s</button>
           <button class="ghost dur is-on" id="dur-20" data-ms="20000" aria-pressed="true">20 s</button>
           <button class="ghost dur" id="dur-60" data-ms="60000" aria-pressed="false">1 min</button>
         </div>
-        <button class="ghost" id="sound" aria-pressed="true">♪ Música</button>
+        <button class="ghost" id="sound" aria-pressed="true">♪ Music</button>
       </div>
       <details class="names">
-        <summary>Editar la lista de estudiantes</summary>
-        <textarea id="names-input" spellcheck="false" aria-label="Lista de nombres, uno por línea"></textarea>
-        <button class="ghost" id="apply-names" style="margin-top:10px">Aplicar nombres</button>
-        <p class="hint">Un nombre completo por línea. La ruleta muestra el nombre y el primer apellido. Los cambios se guardan en este navegador.</p>
+        <summary>Edit the student list</summary>
+        <textarea id="names-input" spellcheck="false" aria-label="Student list, one name per line"></textarea>
+        <button class="ghost" id="apply-names" style="margin-top:10px">Apply list</button>
+        <p class="hint">One full name per line. The wheel shows the first name and the first surname. Changes are saved in this browser.</p>
       </details>
     </section>
 
     <section>
       <div class="turn idle" id="turn">
-        <p class="label">Turno</p>
-        <p class="who" id="who">Gira la ruleta para elegir al primer estudiante.</p>
+        <p class="label">Turn</p>
+        <p class="who" id="who">Spin the wheel to pick the first student.</p>
       </div>
 
       <div class="qhead">
-        <h2>Preguntas</h2>
-        <span id="qcount">4 por turno</span>
+        <h2>Question</h2>
+        <span id="qtag">One question per student</span>
       </div>
-      <ol class="qs" id="qs"></ol>
 
-      <div class="diagram">
-        <h2>Recorrido de la orina</h2>
-        <div class="route">
-          <span class="stop">Nefrona<small>Filtra</small></span>
-          <span class="arrow">→</span>
-          <span class="stop">Pelvis renal<small>Recoge</small></span>
-          <span class="arrow">→</span>
-          <span class="stop">Uréter<small>Transporta</small></span>
-          <span class="arrow">→</span>
-          <span class="stop">Vejiga<small>Almacena</small></span>
-          <span class="arrow">→</span>
-          <span class="stop">Uretra<small>Expulsa</small></span>
+      <p class="empty" id="empty">No question yet. Spin the wheel to get one.</p>
+
+      <div class="card" id="card" hidden role="button" tabindex="0"
+           aria-label="Question card. Activate to turn it over.">
+        <div class="card-inner">
+          <div class="face face-q">
+            <p class="tag"><span class="part" id="q-part">Kidneys</span><span class="by" id="q-by">asked by Nicolas</span></p>
+            <p class="prompt" id="q-text"></p>
+            <p class="flip-hint">Tap to turn the page</p>
+          </div>
+          <div class="face face-a">
+            <p class="tag"><span class="part">Answer</span><span class="by" id="a-by"></span></p>
+            <p class="prompt" id="a-text"></p>
+            <p class="flip-hint">Tap to go back</p>
+          </div>
         </div>
       </div>
 
-      <footer>Los riñones filtran unos 180 litros de sangre al día y producen entre 1 y 2 litros de orina.</footer>
+      <div class="diagram">
+        <h2>The path of the urine — and who presents it</h2>
+        <div class="route">
+          <span class="stop">Kidneys<small>Nicolas</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Ureters<small>Thomas</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Bladder<small>Maria Clara</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Urethra<small>Guadalupe</small></span>
+        </div>
+      </div>
+
+      <footer>The kidneys filter the blood, the ureters carry the urine, the bladder stores it, and the urethra sends it out.</footer>
     </section>
   </div>
 </div>
@@ -339,49 +371,47 @@
 (function(){
   "use strict";
 
+  /* Every question is answerable from the four paragraphs in the textbook
+     page, so each presenter can ask the ones for their own part. */
   var BANK = [
-    ["¿Cuáles son los dos órganos con forma de fríjol que filtran la sangre?","Los riñones."],
-    ["¿En qué parte del cuerpo están ubicados los riñones?","En la parte de atrás del abdomen, uno a cada lado de la columna vertebral, debajo de las costillas."],
-    ["¿Cómo se llama el tubo que lleva la orina desde el riñón hasta la vejiga?","El uréter."],
-    ["¿Cuántos uréteres tiene el cuerpo humano y por qué?","Dos: uno por cada riñón."],
-    ["¿Qué órgano guarda la orina hasta el momento de orinar?","La vejiga urinaria."],
-    ["¿Cómo se llama el conducto por donde sale la orina al exterior?","La uretra."],
-    ["¿Cuál es la unidad más pequeña del riñón, la que hace la filtración?","La nefrona."],
-    ["¿Cuántas nefronas tiene aproximadamente cada riñón?","Alrededor de un millón."],
-    ["¿Cómo se llama la capa externa del riñón?","La corteza renal."],
-    ["¿Cómo se llama la capa interna del riñón, donde están las pirámides?","La médula renal."],
-    ["¿Qué es la pelvis renal?","La cavidad en forma de embudo donde se junta la orina antes de pasar al uréter."],
-    ["¿Cómo se llama el ovillo de capilares donde empieza la filtración de la sangre?","El glomérulo."],
-    ["¿Qué estructura rodea al glomérulo como una copa?","La cápsula de Bowman."],
-    ["¿Por cuál vaso sanguíneo entra al riñón la sangre con desechos?","Por la arteria renal."],
-    ["¿Por cuál vaso sanguíneo sale del riñón la sangre ya limpia?","Por la vena renal."],
-    ["Además de los riñones, ¿qué órgano elimina desechos en forma de sudor?","La piel, por medio de las glándulas sudoríparas."],
-    ["¿Qué órgano expulsa el dióxido de carbono del cuerpo?","Los pulmones."],
-    ["¿Cómo se llama el líquido de desecho que producen los riñones?","La orina."],
-    ["¿De qué está formada principalmente la orina?","Casi toda es agua (cerca del 95 %), más urea y sales minerales."],
-    ["¿Cómo se llama el desecho que se forma cuando el cuerpo descompone las proteínas?","La urea."],
-    ["¿Cuánta orina puede almacenar la vejiga de una persona?","Entre 300 y 500 mililitros, más o menos medio litro."],
-    ["¿Qué músculo controla la salida de la orina por la uretra?","El esfínter uretral."],
-    ["¿Qué le pasaría a una persona si sus dos riñones dejaran de funcionar?","Se le acumularían desechos tóxicos en la sangre y necesitaría diálisis o un trasplante."],
-    ["¿Cómo se llama el tratamiento con una máquina que hace el trabajo del riñón?","La diálisis."],
-    ["Nombra en orden el recorrido que hace la orina dentro del cuerpo.","Nefrona → pelvis renal → uréter → vejiga → uretra."],
-    ["¿Qué forma y qué tamaño tiene un riñón?","Forma de fríjol y mide unos 11 o 12 centímetros, parecido a un puño cerrado."],
-    ["¿Cuál es la función principal del sistema excretor?","Eliminar los desechos y el exceso de agua y de sales que hay en la sangre."],
-    ["¿Qué son las pirámides renales?","Estructuras en forma de cono que están en la médula renal y llevan la orina hacia los cálices."],
-    ["¿Qué son los cálices renales?","Pequeñas cavidades que recogen la orina de las pirámides y la pasan a la pelvis renal."],
-    ["¿El hígado ayuda al sistema excretor? ¿Cómo?","Sí: convierte el amoníaco, que es muy tóxico, en urea, y además produce la bilis."],
-    ["¿Qué es el túbulo renal de la nefrona?","El tubo donde el riñón devuelve a la sangre el agua y los nutrientes que todavía sirven."],
-    ["¿Qué significa que el riñón hace «reabsorción»?","Que recupera y devuelve a la sangre el agua y las sustancias útiles que había filtrado."],
-    ["¿Cuánta sangre filtran los riñones en un día?","Unos 180 litros de filtrado, de los cuales solo salen 1 o 2 litros de orina."],
-    ["¿Por qué la orina es de color amarillo?","Por un pigmento llamado urocromo."],
-    ["¿Qué le pasa al color de la orina cuando tomas poca agua?","Se pone más oscura porque está más concentrada."],
-    ["Menciona dos hábitos que cuidan los riñones.","Tomar suficiente agua y comer con poca sal; también, no aguantarse las ganas de orinar."],
-    ["¿Qué glándula está ubicada justo encima de cada riñón?","La glándula suprarrenal."],
-    ["¿Cómo se llama la membrana que envuelve y protege al riñón?","La cápsula renal."],
-    ["¿Por qué el sudor se considera parte de la excreción?","Porque con él se eliminan agua, sales y un poco de urea a través de la piel."],
-    ["¿Cuál órgano del sistema excretor es un músculo elástico que se estira?","La vejiga, que se estira a medida que se llena de orina."],
-    ["¿Qué diferencia hay entre el uréter y la uretra?","El uréter va del riñón a la vejiga; la uretra va de la vejiga al exterior."],
-    ["¿Cuántos riñones necesita una persona para vivir?","Con uno solo puede vivir, porque el riñón que queda hace todo el trabajo."]
+    /* --- Kidneys · Nicolas --- */
+    {part:"Kidneys", by:"Nicolas", q:"Which organ filters the blood?", a:"The kidneys."},
+    {part:"Kidneys", by:"Nicolas", q:"What do the kidneys turn waste into?", a:"Into urine."},
+    {part:"Kidneys", by:"Nicolas", q:"How many kidneys does the body have?", a:"Two."},
+    {part:"Kidneys", by:"Nicolas", q:"Which organ is the most important one of the excretory system?", a:"The kidneys."},
+    {part:"Kidneys", by:"Nicolas", q:"Do the kidneys make urine or store urine?", a:"They make it. The kidneys transform waste into urine."},
+    {part:"Kidneys", by:"Nicolas", q:"What comes out of the kidneys and carries the urine away?", a:"The two ureters."},
+
+    /* --- Ureters · Thomas --- */
+    {part:"Ureters", by:"Thomas", q:"What do the ureters carry?", a:"The urine."},
+    {part:"Ureters", by:"Thomas", q:"Where do the ureters carry the urine to?", a:"To the bladder."},
+    {part:"Ureters", by:"Thomas", q:"How many ureters are there?", a:"Two, one for each kidney."},
+    {part:"Ureters", by:"Thomas", q:"Which organ do the ureters come out of?", a:"The kidneys."},
+    {part:"Ureters", by:"Thomas", q:"Are the ureters tubes, or organs that store urine?", a:"They are tubes. They only carry the urine."},
+    {part:"Ureters", by:"Thomas", q:"What is the name of the two conduits that come out of the kidneys?", a:"The ureters."},
+
+    /* --- Bladder · Maria Clara --- */
+    {part:"Bladder", by:"Maria Clara", q:"Where does all the urine end up?", a:"In the bladder."},
+    {part:"Bladder", by:"Maria Clara", q:"What does the bladder do with the urine?", a:"It holds it before the urine is eliminated."},
+    {part:"Bladder", by:"Maria Clara", q:"Which organ holds the urine before it leaves the body?", a:"The bladder."},
+    {part:"Bladder", by:"Maria Clara", q:"Does the bladder make urine or store urine?", a:"It stores it. The kidneys are the ones that make it."},
+    {part:"Bladder", by:"Maria Clara", q:"How does the urine get to the bladder?", a:"Through the two ureters."},
+
+    /* --- Urethra · Guadalupe --- */
+    {part:"Urethra", by:"Guadalupe", q:"Which organ takes the urine outside the body?", a:"The urethra."},
+    {part:"Urethra", by:"Guadalupe", q:"Where does the urethra take the urine from?", a:"From the bladder."},
+    {part:"Urethra", by:"Guadalupe", q:"Is the urethra an internal or an external organ?", a:"It is an external organ."},
+    {part:"Urethra", by:"Guadalupe", q:"Which part does the urine pass through last?", a:"The urethra."},
+    {part:"Urethra", by:"Guadalupe", q:"What does the urethra lead out of the body?", a:"The urine."},
+
+    /* --- Whole system --- */
+    {part:"Whole system", by:"everyone", q:"Put these in the right order: bladder, kidneys, ureters, urethra.", a:"Kidneys, ureters, bladder, urethra."},
+    {part:"Whole system", by:"everyone", q:"Which part comes right after the kidneys?", a:"The ureters."},
+    {part:"Whole system", by:"everyone", q:"Which part comes right after the bladder?", a:"The urethra."},
+    {part:"Whole system", by:"everyone", q:"What is the name of the system that removes waste from the body?", a:"The excretory system."},
+
+    /* --- Critical thinking box --- */
+    {part:"Critical thinking", by:"everyone", q:"Can the excretory system work with only one kidney?", a:"Yes. One kidney can do the work of both."}
   ];
 
   var ROSTER = [
@@ -437,6 +467,7 @@
     N = names.length;
     used = new Array(N).fill(false);
   }
+
   var rot = -7;
   var spinning = false;
   var deck = [];
@@ -447,9 +478,15 @@
   var spinBtn = document.getElementById("spin");
   var whoEl = document.getElementById("who");
   var turnEl = document.getElementById("turn");
-  var qsEl = document.getElementById("qs");
   var tallyEl = document.getElementById("tally-num");
   var namesInput = document.getElementById("names-input");
+  var card = document.getElementById("card");
+  var emptyEl = document.getElementById("empty");
+  var qPart = document.getElementById("q-part");
+  var qBy = document.getElementById("q-by");
+  var qText = document.getElementById("q-text");
+  var aBy = document.getElementById("a-by");
+  var aText = document.getElementById("a-text");
 
   /* ---------- storage (best effort) ---------- */
   function load(){
@@ -469,7 +506,7 @@
     return out.length > 1 ? out : ROSTER.slice();
   }
 
-  /* ---------- deck ---------- */
+  /* ---------- question deck ---------- */
   function shuffle(a){
     for(var i = a.length - 1; i > 0; i--){
       var j = Math.floor(Math.random() * (i + 1));
@@ -480,9 +517,9 @@
   function refillDeck(){
     deck = shuffle(BANK.map(function(_, i){ return i; }));
   }
-  function drawQuestions(){
-    if(deck.length < 4) refillDeck();
-    return deck.splice(0, 4).map(function(i){ return BANK[i]; });
+  function nextQuestion(){
+    if(!deck.length) refillDeck();
+    return BANK[deck.shift()];
   }
 
   /* ---------- wheel drawing ---------- */
@@ -545,12 +582,12 @@
     ctx.stroke();
   }
 
-  /* ---------- galope sintetizado (Rossini, obertura de Guillermo Tell) ----
-     La composición es de dominio público; aquí se sintetiza con WebAudio
-     para no depender de ninguna grabación ni de la red.                  */
+  /* ---------- galop, synthesised (Rossini, William Tell overture) --------
+     The composition is public domain; it is synthesised here with WebAudio
+     so it needs no recording and no network.                             */
   var music = (function(){
     var AC = window.AudioContext || window.webkitAudioContext;
-    var ctx = null, master = null, noise = null, timer = null;
+    var ctx2 = null, master = null, noise = null, timer = null;
     var on = true;
 
     var TICK = 0.135;
@@ -566,20 +603,20 @@
     function hz(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
 
     function boot(){
-      if(ctx || !AC) return ctx;
-      ctx = new AC();
-      master = ctx.createGain();
+      if(ctx2 || !AC) return ctx2;
+      ctx2 = new AC();
+      master = ctx2.createGain();
       master.gain.value = 0.55;
-      master.connect(ctx.destination);
-      var len = Math.floor(ctx.sampleRate * 0.09);
-      noise = ctx.createBuffer(1, len, ctx.sampleRate);
+      master.connect(ctx2.destination);
+      var len = Math.floor(ctx2.sampleRate * 0.09);
+      noise = ctx2.createBuffer(1, len, ctx2.sampleRate);
       var data = noise.getChannelData(0);
       for(var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 7);
-      return ctx;
+      return ctx2;
     }
 
     function tone(at, f, dur, type, vol){
-      var o = ctx.createOscillator(), g = ctx.createGain();
+      var o = ctx2.createOscillator(), g = ctx2.createGain();
       o.type = type;
       o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, at);
@@ -590,7 +627,7 @@
     }
 
     function hoof(at, vol){
-      var s = ctx.createBufferSource(), g = ctx.createGain();
+      var s = ctx2.createBufferSource(), g = ctx2.createGain();
       s.buffer = noise;
       g.gain.value = vol;
       s.connect(g); g.connect(master);
@@ -598,7 +635,7 @@
     }
 
     function pump(){
-      while(nextAt < ctx.currentTime + 0.4 && nextAt < endAt){
+      while(nextAt < ctx2.currentTime + 0.4 && nextAt < endAt){
         var beats = RHYTHM[step];
         var note = PHRASES[phrase][step];
         var span = beats * TICK;
@@ -614,7 +651,7 @@
         step++;
         if(step >= RHYTHM.length){ step = 0; phrase = (phrase + 1) % PHRASES.length; }
       }
-      if(ctx.currentTime > endAt + 0.5) halt();
+      if(ctx2.currentTime > endAt + 0.5) halt();
     }
 
     function halt(){
@@ -622,33 +659,32 @@
     }
 
     return {
-      get on(){ return on; },
       toggle: function(){ on = !on; if(!on) this.stop(); return on; },
       start: function(ms){
         if(!on || !boot()) return;
-        if(ctx.state === "suspended") ctx.resume();
+        if(ctx2.state === "suspended") ctx2.resume();
         halt();
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setValueAtTime(0.55, ctx.currentTime);
-        nextAt = ctx.currentTime + 0.08;
+        master.gain.cancelScheduledValues(ctx2.currentTime);
+        master.gain.setValueAtTime(0.55, ctx2.currentTime);
+        nextAt = ctx2.currentTime + 0.08;
         endAt = nextAt + ms / 1000;
         phrase = 0; step = 0;
         pump();
         timer = setInterval(pump, 45);
       },
       fanfare: function(){
-        if(!on || !ctx) return;
-        var at = ctx.currentTime + 0.05;
+        if(!on || !ctx2) return;
+        var at = ctx2.currentTime + 0.05;
         [72, 76, 79, 84].forEach(function(n, i){
           tone(at + i * 0.075, hz(n), 0.75, "square", 0.17);
         });
       },
       stop: function(){
         halt();
-        if(!ctx) return;
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-        master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+        if(!ctx2) return;
+        master.gain.cancelScheduledValues(ctx2.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx2.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.0001, ctx2.currentTime + 0.25);
       }
     };
   })();
@@ -661,11 +697,11 @@
     var left = remaining();
     tallyEl.textContent = left;
     spinBtn.disabled = spinning || left === 0;
-    if(left === 0 && !spinning) spinBtn.textContent = "Ya pasaron todos";
+    if(left === 0 && !spinning) spinBtn.textContent = "Everyone has had a turn";
   }
 
   /* Trapezoidal speed: accelerate, hold, then brake into the target.
-     A plain ease-out would spend a 60 s spin looking frozen. */
+     A plain ease-out would spend a long spin looking frozen. */
   function profile(t){
     var up = 0.12, down = 0.35, hold = 1 - up - down;
     var peak = 1 / (up / 2 + hold + down / 2);
@@ -700,7 +736,10 @@
     spinning = true;
     spinBtn.disabled = true;
     turnEl.classList.add("idle");
-    whoEl.textContent = "Girando la ruleta…";
+    whoEl.textContent = "Spinning…";
+    card.hidden = true;
+    emptyEl.hidden = false;
+    emptyEl.textContent = "Picking a student…";
     music.start(duration);
 
     function frame(now){
@@ -710,7 +749,7 @@
       var left = Math.ceil((duration - (now - t0)) / 1000);
       if(left !== shown){
         shown = left;
-        spinBtn.textContent = left > 0 ? "Girando… " + left + " s" : "Girando…";
+        spinBtn.textContent = left > 0 ? "Spinning… " + left + " s" : "Spinning…";
       }
       if(p < 1){
         requestAnimationFrame(frame);
@@ -718,7 +757,7 @@
         rot = to;
         render();
         spinning = false;
-        spinBtn.textContent = "Girar la ruleta";
+        spinBtn.textContent = "Spin the wheel";
         music.stop();
         music.fanfare();
         announce(pick);
@@ -731,50 +770,34 @@
     used[index] = true;
     render();
     turnEl.classList.remove("idle");
-    turnEl.querySelector(".label").textContent = "Turno · N.º " + (index + 1) + " de la lista";
+    turnEl.querySelector(".label").textContent = "Turn · No. " + (index + 1) + " on the list";
     whoEl.textContent = names[index];
-    showQuestions(drawQuestions());
+    showQuestion(nextQuestion());
     updateTally();
     turnEl.scrollIntoView({behavior: "smooth", block: "nearest"});
   }
 
-  function showQuestions(list){
-    qsEl.textContent = "";
-    list.forEach(function(pair, i){
-      var li = document.createElement("li");
+  function showQuestion(item){
+    card.classList.remove("flipped");
+    qPart.textContent = item.part;
+    qBy.textContent = "asked by " + item.by;
+    qText.textContent = item.q;
+    aBy.textContent = item.part;
+    aText.textContent = item.a;
+    emptyEl.hidden = true;
+    card.hidden = false;
+  }
 
-      var num = document.createElement("span");
-      num.className = "num";
-      num.textContent = String(i + 1).padStart(2, "0");
+  function clearQuestion(message){
+    card.hidden = true;
+    card.classList.remove("flipped");
+    emptyEl.hidden = false;
+    emptyEl.textContent = message;
+  }
 
-      var q = document.createElement("p");
-      q.className = "q";
-      q.textContent = pair[0];
-
-      var btn = document.createElement("button");
-      btn.className = "reveal";
-      btn.type = "button";
-      btn.textContent = "Ver respuesta";
-
-      var ans = document.createElement("p");
-      ans.className = "a";
-      ans.hidden = true;
-      var tag = document.createElement("b");
-      tag.textContent = "Respuesta";
-      ans.appendChild(tag);
-      ans.appendChild(document.createTextNode(pair[1]));
-
-      btn.addEventListener("click", function(){
-        ans.hidden = !ans.hidden;
-        btn.textContent = ans.hidden ? "Ver respuesta" : "Ocultar respuesta";
-      });
-
-      li.appendChild(num);
-      li.appendChild(q);
-      li.appendChild(btn);
-      li.appendChild(ans);
-      qsEl.appendChild(li);
-    });
+  function flip(){
+    if(card.hidden) return;
+    card.classList.toggle("flipped");
   }
 
   /* ---------- wiring ---------- */
@@ -782,6 +805,11 @@
   canvas.addEventListener("click", spin);
   canvas.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); spin(); }
+  });
+
+  card.addEventListener("click", flip);
+  card.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); }
   });
 
   Array.prototype.forEach.call(document.querySelectorAll(".dur"), function(b){
@@ -801,24 +829,24 @@
     var on = music.toggle();
     soundBtn.classList.toggle("is-off", !on);
     soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
-    soundBtn.textContent = on ? "♪ Música" : "♪ Sin música";
+    soundBtn.textContent = on ? "♪ Music" : "♪ Muted";
   });
 
   document.getElementById("reset").addEventListener("click", function(){
     used = new Array(N).fill(false);
     refillDeck();
     turnEl.classList.add("idle");
-    turnEl.querySelector(".label").textContent = "Turno";
-    whoEl.textContent = "Gira la ruleta para elegir al primer estudiante.";
-    qsEl.textContent = "";
-    spinBtn.textContent = "Girar la ruleta";
+    turnEl.querySelector(".label").textContent = "Turn";
+    whoEl.textContent = "Spin the wheel to pick the first student.";
+    clearQuestion("No question yet. Spin the wheel to get one.");
+    spinBtn.textContent = "Spin the wheel";
     render();
     updateTally();
   });
 
   document.getElementById("shuffle-qs").addEventListener("click", function(){
     refillDeck();
-    if(!turnEl.classList.contains("idle")) showQuestions(drawQuestions());
+    if(!card.hidden) showQuestion(nextQuestion());
   });
 
   document.getElementById("apply-names").addEventListener("click", function(){
@@ -826,10 +854,10 @@
     namesInput.value = names.join("\n");
     save();
     turnEl.classList.add("idle");
-    turnEl.querySelector(".label").textContent = "Turno";
-    whoEl.textContent = "Gira la ruleta para elegir al primer estudiante.";
-    qsEl.textContent = "";
-    spinBtn.textContent = "Girar la ruleta";
+    turnEl.querySelector(".label").textContent = "Turn";
+    whoEl.textContent = "Spin the wheel to pick the first student.";
+    clearQuestion("No question yet. Spin the wheel to get one.");
+    spinBtn.textContent = "Spin the wheel";
     render();
     updateTally();
   });
