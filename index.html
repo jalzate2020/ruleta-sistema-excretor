@@ -29,6 +29,8 @@
     --petrol:#2F4F5C;
     --seg-used:#BCC8C6;
     --seg-used-fg:#5C7077;
+    --right-bg:#E1F0ED;
+    --wrong-bg:#F7E3E5;
     --focus:#1B6F6C;
     --shadow:0 1px 0 rgba(22,36,43,.04), 0 12px 32px -18px rgba(22,36,43,.45);
   }
@@ -46,6 +48,8 @@
     --petrol:#7FA3B0;
     --seg-used:#24383F;
     --seg-used-fg:#7A8F96;
+    --right-bg:#153630;
+    --wrong-bg:#3A1F24;
     --focus:#4EBDB7;
     --shadow:0 1px 0 rgba(0,0,0,.2), 0 16px 40px -22px rgba(0,0,0,.8);
   }
@@ -63,6 +67,8 @@
     --petrol:#7FA3B0;
     --seg-used:#24383F;
     --seg-used-fg:#7A8F96;
+    --right-bg:#153630;
+    --wrong-bg:#3A1F24;
     --focus:#4EBDB7;
     --shadow:0 1px 0 rgba(0,0,0,.2), 0 16px 40px -22px rgba(0,0,0,.8);
   }
@@ -183,53 +189,54 @@
   }
   .qhead span{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.08em}
 
-  /* ---------- flip card ---------- */
-  .card{perspective:1600px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .card:focus-visible{outline:3px solid var(--focus);outline-offset:4px;border-radius:2px}
-  .card-inner{
-    display:grid;position:relative;transform-style:preserve-3d;
-    transition:transform .75s cubic-bezier(.45,.05,.2,1)
+  /* ---------- quiz ---------- */
+  .quiz{
+    background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--amber);
+    border-radius:2px;padding:22px 24px;box-shadow:var(--shadow)
   }
-  .card.flipped .card-inner{transform:rotateY(180deg)}
-  .face{
-    grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    display:flex;flex-direction:column;gap:14px;min-height:210px;
-    border:1px solid var(--line);border-radius:2px;padding:22px 24px;box-shadow:var(--shadow)
-  }
-  .face-q{background:var(--surface);border-top:4px solid var(--amber)}
-  .face-a{background:var(--surface-2);border-top:4px solid var(--teal);transform:rotateY(180deg)}
   .tag{
     font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-    margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center
+    margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center
   }
   .tag .part{color:var(--amber);font-weight:600}
-  .face-a .tag .part{color:var(--teal)}
   .tag .by{color:var(--muted)}
   .prompt{
     font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:600;
-    font-size:clamp(21px,3.1vw,28px);line-height:1.22;letter-spacing:-.01em;margin:0;
-    flex:1;text-wrap:pretty
+    font-size:clamp(21px,3.1vw,28px);line-height:1.22;letter-spacing:-.01em;margin:0;text-wrap:pretty
   }
-  .flip-hint{
-    margin:0;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.09em;
-    text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px
+  .options{display:grid;gap:10px;margin-top:20px}
+  @media (min-width:620px){ .options{grid-template-columns:1fr 1fr} }
+  .opt{
+    display:flex;gap:12px;align-items:flex-start;text-align:left;
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:2px;
+    padding:15px 17px;font-family:inherit;font-size:16px;font-weight:500;line-height:1.35;
+    min-height:62px;cursor:pointer;transition:border-color .15s ease, background .15s ease
   }
-  .flip-hint::before{content:"";width:16px;height:1px;background:currentColor}
+  .opt:hover:not(:disabled){border-color:var(--ink)}
+  .opt:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  .opt:disabled{cursor:default;opacity:.75}
+  .opt .letter{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--amber);
+    flex:none;padding-top:1px
+  }
+  .opt.right{background:var(--right-bg);border-color:var(--teal);opacity:1}
+  .opt.right .letter{color:var(--teal)}
+  .opt.wrong{background:var(--wrong-bg);border-color:var(--crimson);opacity:1}
+  .opt.wrong .letter{color:var(--crimson)}
+
+  .verdict{
+    margin:18px 0 0;padding:14px 16px;border-left:3px solid var(--teal);
+    background:var(--surface-2);font-size:16px;line-height:1.4
+  }
+  .verdict.miss{border-left-color:var(--crimson)}
+  .verdict b{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+  .verdict.miss b{color:var(--crimson)}
+
   .empty{
     border:1px dashed var(--line);border-radius:2px;padding:34px 24px;margin:0;
     color:var(--muted);text-align:center;font-size:15px
   }
-
-  /* ---------- verdict ---------- */
-  .judge{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .judge button{
-    flex:1 1 180px;border:0;border-radius:2px;padding:15px 16px;cursor:pointer;
-    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;font-size:16px
-  }
-  .judge button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-  #judge-yes{background:var(--teal);color:#fff}
-  #judge-no{background:none;color:var(--muted);border:1px solid var(--line)}
-  #judge-no:hover{border-color:var(--ink);color:var(--ink)}
 
   /* ---------- winners ---------- */
   .winners{margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
@@ -317,7 +324,7 @@
     <div>
       <p class="eyebrow">Natural Science · Grade 5</p>
       <h1>Excretory System <em>Wheel</em></h1>
-      <p>Four gifts, eight questions. Spin the wheel, read the question, turn the card to check the answer. A right answer wins a gift. The game ends when the last gift is handed out.</p>
+      <p>Four gifts, eight questions. Spin the wheel, read the question out loud, then tap the answer the student gave. A right answer wins a gift. The game ends when the last gift is handed out.</p>
     </div>
     <div class="scores">
       <div class="gifts">
@@ -371,25 +378,11 @@
 
       <p class="empty" id="empty">No question yet. Spin the wheel to get one.</p>
 
-      <div class="card" id="card" hidden role="button" tabindex="0"
-           aria-label="Question card. Activate to turn it over.">
-        <div class="card-inner">
-          <div class="face face-q">
-            <p class="tag"><span class="part" id="q-part">Kidneys</span><span class="by" id="q-by">asked by Nicolas</span></p>
-            <p class="prompt" id="q-text"></p>
-            <p class="flip-hint">Tap to turn the page</p>
-          </div>
-          <div class="face face-a">
-            <p class="tag"><span class="part">Answer</span><span class="by" id="a-by"></span></p>
-            <p class="prompt" id="a-text"></p>
-            <p class="flip-hint">Tap to go back</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="judge" id="judge" hidden>
-        <button id="judge-yes">Right answer — give a gift</button>
-        <button id="judge-no">Not quite — no gift</button>
+      <div class="quiz" id="quiz" hidden>
+        <p class="tag"><span class="part" id="q-part"></span><span class="by" id="q-by"></span></p>
+        <p class="prompt" id="q-text"></p>
+        <div class="options" id="options"></div>
+        <p class="verdict" id="verdict" hidden></p>
       </div>
 
       <div class="winners" id="winners" hidden>
@@ -421,20 +414,36 @@
 
   /* Eight questions, all answerable from the four paragraphs on the textbook
      page. MAIN holds one per presenter and is dealt first, so every presenter
-     asks once. SPARE is the backup set, used only when someone answers wrong. */
+     asks once. SPARE is the backup set, used only when someone answers wrong.
+     In each question, options[0] is the right one; they are shuffled on screen. */
   var MAIN = [
-    {part:"Kidneys",  by:"Nicolas",     q:"Which organ filters the blood and turns the waste into urine?", a:"The kidneys."},
-    {part:"Ureters",  by:"Thomas",      q:"What do the ureters carry, and where do they carry it to?",     a:"They carry the urine to the bladder."},
-    {part:"Bladder",  by:"Maria Clara", q:"Where does all the urine end up before it is eliminated?",      a:"In the bladder."},
-    {part:"Urethra",  by:"Guadalupe Usme",   q:"Which organ leads the urine from the bladder to outside the body?", a:"The urethra."}
+    {part:"Kidneys", by:"Nicolas", q:"Which organ filters the blood and turns the waste into urine?",
+     options:["The kidneys", "The bladder", "The ureters", "The urethra"]},
+    {part:"Ureters", by:"Thomas", q:"What do the ureters carry, and where do they carry it to?",
+     options:["They carry the urine to the bladder", "They carry the blood to the kidneys",
+              "They carry the urine outside the body", "They carry the urine back to the kidneys"]},
+    {part:"Bladder", by:"Maria Clara", q:"Where does all the urine end up before it is eliminated?",
+     options:["In the bladder", "In the kidneys", "In the ureters", "In the urethra"]},
+    {part:"Urethra", by:"Guadalupe Usme", q:"Which organ leads the urine from the bladder to outside the body?",
+     options:["The urethra", "The ureters", "The kidneys", "The bladder"]}
   ];
   var SPARE = [
-    {part:"Kidneys",  by:"Nicolas",     q:"How many kidneys does the body have?",                          a:"Two."},
-    {part:"Ureters",  by:"Thomas",      q:"How many ureters are there, and which organ do they come out of?", a:"Two, and they come out of the kidneys."},
-    {part:"Bladder",  by:"Maria Clara", q:"Does the bladder make the urine, or does it store the urine?",  a:"It stores it. The kidneys are the ones that make it."},
-    {part:"Urethra",  by:"Guadalupe Usme",   q:"Is the urethra an internal organ or an external organ?",        a:"It is an external organ."}
+    {part:"Kidneys", by:"Nicolas", q:"How many kidneys does the body have?",
+     options:["Two", "One", "Three", "Four"]},
+    {part:"Ureters", by:"Thomas", q:"How many ureters are there, and which organ do they come out of?",
+     options:["Two, and they come out of the kidneys", "One, and it comes out of the bladder",
+              "Two, and they come out of the bladder", "Four, and they come out of the kidneys"]},
+    {part:"Bladder", by:"Maria Clara", q:"Does the bladder make the urine, or does it store the urine?",
+     options:["It stores it — the kidneys are the ones that make it",
+              "It makes it — the kidneys are the ones that store it",
+              "It makes the urine and it stores the urine",
+              "It only carries the urine to the urethra"]},
+    {part:"Urethra", by:"Guadalupe Usme", q:"Is the urethra an internal organ or an external organ?",
+     options:["It is an external organ", "It is an internal organ",
+              "It is a blood vessel", "It is a muscle inside the kidney"]}
   ];
   var TOTAL_GIFTS = 4;
+  var LETTERS = ["A", "B", "C", "D"];
 
   var ROSTER = [
     "Estudiante 1",
@@ -507,14 +516,13 @@
   var giftsEl = document.getElementById("gifts-num");
   var qsEl = document.getElementById("qs-num");
   var namesInput = document.getElementById("names-input");
-  var card = document.getElementById("card");
+  var quiz = document.getElementById("quiz");
   var emptyEl = document.getElementById("empty");
   var qPart = document.getElementById("q-part");
   var qBy = document.getElementById("q-by");
   var qText = document.getElementById("q-text");
-  var aBy = document.getElementById("a-by");
-  var aText = document.getElementById("a-text");
-  var judge = document.getElementById("judge");
+  var optionsEl = document.getElementById("options");
+  var verdictEl = document.getElementById("verdict");
   var winnersBox = document.getElementById("winners");
   var winnersList = document.getElementById("winners-list");
 
@@ -759,8 +767,7 @@
     turnEl.classList.remove("over");
     turnEl.classList.add("idle");
     whoEl.textContent = "Spinning…";
-    card.hidden = true;
-    judge.hidden = true;
+    quiz.hidden = true;
     emptyEl.hidden = false;
     emptyEl.textContent = "Picking a student…";
     music.start(duration);
@@ -799,49 +806,70 @@
     turnEl.querySelector(".label").textContent = "Turn · No. " + (index + 1) + " on the list";
     whoEl.textContent = names[index];
 
-    card.classList.remove("flipped");
     qPart.textContent = item.part;
     qBy.textContent = "asked by " + item.by;
     qText.textContent = item.q;
-    aBy.textContent = item.part;
-    aText.textContent = item.a;
-    emptyEl.hidden = true;
-    card.hidden = false;
-    judge.hidden = true;
+    verdictEl.hidden = true;
+    verdictEl.classList.remove("miss");
+    optionsEl.textContent = "";
 
+    // options[0] is the right one in the data; on screen the order is random.
+    var right = item.options[0];
+    shuffle(item.options.slice()).forEach(function(text, i){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      var letter = document.createElement("span");
+      letter.className = "letter";
+      letter.textContent = LETTERS[i];
+      var label = document.createElement("span");
+      label.textContent = text;
+      b.appendChild(letter);
+      b.appendChild(label);
+      b.addEventListener("click", function(){ answer(b, text === right, right); });
+      optionsEl.appendChild(b);
+    });
+
+    emptyEl.hidden = true;
+    quiz.hidden = false;
     updateScores();
     turnEl.scrollIntoView({behavior: "smooth", block: "nearest"});
   }
 
-  function flip(){
-    if(card.hidden) return;
-    var showingAnswer = !card.classList.contains("flipped");
-    card.classList.toggle("flipped");
-    // The teacher decides only once the answer is on screen.
-    if(showingAnswer && pending) judge.hidden = false;
-  }
-
-  function settle(correct){
+  function answer(chosen, correct, right){
     if(!pending) return;
+    var student = pending.student;
+    var part = pending.item.part;
+    pending = null;
+
+    Array.prototype.forEach.call(optionsEl.children, function(b){
+      b.disabled = true;
+      var text = b.lastChild.textContent;
+      if(text === right) b.classList.add("right");
+      else if(b === chosen) b.classList.add("wrong");
+    });
+
+    verdictEl.textContent = "";
+    var head = document.createElement("b");
+    verdictEl.appendChild(head);
     if(correct){
       giftsLeft--;
-      addWinner(pending.student, pending.item.part);
+      addWinner(student, part);
       music.chord([76, 79, 84, 88], 0.16);
+      head.textContent = "Right answer";
+      verdictEl.classList.remove("miss");
+      verdictEl.appendChild(document.createTextNode(student + " wins a gift."));
+    }else{
+      head.textContent = "Not this time";
+      verdictEl.classList.add("miss");
+      verdictEl.appendChild(document.createTextNode("The right answer was: " + right + "."));
     }
-    pending = null;
-    judge.hidden = true;
-    card.hidden = true;
-    card.classList.remove("flipped");
-    emptyEl.hidden = false;
+    verdictEl.hidden = false;
 
     if(giftsLeft === 0){
       finish("All four gifts have been handed out. Game over.");
     }else if(deck.length === 0){
       finish("No questions left. " + giftsLeft + (giftsLeft === 1 ? " gift was" : " gifts were") + " not handed out.");
-    }else{
-      emptyEl.textContent = correct
-        ? "Gift given. Spin again for the next question."
-        : "No gift this time. Spin again for the next question.";
     }
     updateScores();
   }
@@ -870,7 +898,6 @@
     turnEl.classList.add("over");
     turnEl.querySelector(".label").textContent = "Game over";
     whoEl.textContent = message;
-    emptyEl.textContent = "Press “Start a new game” to play again.";
     spinBtn.textContent = "Game over";
   }
 
@@ -882,9 +909,9 @@
     over = false;
     winnersList.textContent = "";
     winnersBox.hidden = true;
-    card.hidden = true;
-    card.classList.remove("flipped");
-    judge.hidden = true;
+    quiz.hidden = true;
+    optionsEl.textContent = "";
+    verdictEl.hidden = true;
     emptyEl.hidden = false;
     emptyEl.textContent = "No question yet. Spin the wheel to get one.";
     turnEl.classList.remove("over");
@@ -902,14 +929,6 @@
   canvas.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); spin(); }
   });
-
-  card.addEventListener("click", flip);
-  card.addEventListener("keydown", function(e){
-    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); }
-  });
-
-  document.getElementById("judge-yes").addEventListener("click", function(){ settle(true); });
-  document.getElementById("judge-no").addEventListener("click", function(){ settle(false); });
 
   Array.prototype.forEach.call(document.querySelectorAll(".dur"), function(b){
     b.addEventListener("click", function(){
