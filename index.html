@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Ruleta de turnos con preguntas sobre la estructura del sistema excretor para grado 5.º.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Ruleta de turnos con preguntas sobre la estructura del sistema excretor.">
 <style>
   :root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   body{margin:0}
@@ -216,11 +217,45 @@
   footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
     font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--muted)}
 
+
+  body.locked{overflow:hidden}
+  body.locked .wrap{display:none}
+  .gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+    padding:24px;background:var(--paper)}
+  .gate-card{width:100%;max-width:400px;background:var(--surface);
+    border:1px solid var(--line);border-left:5px solid var(--crimson);border-radius:2px;
+    padding:28px 26px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px}
+  .gate-card h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;
+    font-size:27px;line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
+  .gate-card p.lead{margin:0;color:var(--muted);font-size:14.5px}
+  .gate-card input{padding:12px 14px;border:1px solid var(--line);border-radius:2px;
+    background:var(--surface-2);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:15px}
+  .gate-card input:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .gate-card button{border:0;border-radius:2px;background:var(--crimson);color:#fff;padding:13px;
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;font-size:16px;cursor:pointer}
+  .gate-card button:disabled{background:var(--seg-used);color:var(--seg-used-fg);cursor:wait}
+  .gate-card button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .gate-error{margin:0;color:var(--crimson);font-size:13.5px;font-weight:500}
+  .gate-note{margin:0;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+
   @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 </style>
 
 </head>
-<body>
+<body class="locked">
+<div class="gate" id="gate">
+  <form class="gate-card" id="gate-form">
+    <p class="eyebrow">Acceso a la clase</p>
+    <h2>Ruleta del Sistema Excretor</h2>
+    <p class="lead">Escribe la clave de la clase para cargar la lista de estudiantes.</p>
+    <input type="password" id="gate-pass" autocomplete="current-password"
+           placeholder="Clave de la clase" aria-label="Clave de la clase" required>
+    <button type="submit" id="gate-go">Entrar</button>
+    <p class="gate-error" id="gate-error" hidden>Clave incorrecta. Intenta de nuevo.</p>
+    <p class="gate-note">La lista viaja cifrada dentro de la p&aacute;gina. Sin la clave no se puede leer.</p>
+  </form>
+</div>
+
 <div class="wrap">
   <header class="masthead">
     <div>
@@ -229,7 +264,7 @@
       <p>Gira la ruleta, sale un estudiante y aparecen sus 4 preguntas sobre la estructura del sistema excretor.</p>
     </div>
     <div class="tally">
-      <b id="tally-num">24</b>
+      <b id="tally-num">25</b>
       <span>por pasar</span>
     </div>
   </header>
@@ -246,10 +281,10 @@
         <button class="ghost" id="shuffle-qs">Barajar preguntas</button>
       </div>
       <details class="names">
-        <summary>Editar los 24 nombres</summary>
+        <summary>Editar la lista de estudiantes</summary>
         <textarea id="names-input" spellcheck="false" aria-label="Lista de nombres, uno por línea"></textarea>
         <button class="ghost" id="apply-names" style="margin-top:10px">Aplicar nombres</button>
-        <p class="hint">Un nombre por línea. Los nombres se guardan en este navegador.</p>
+        <p class="hint">Un nombre completo por línea. La ruleta muestra el nombre y el primer apellido. Los cambios se guardan en este navegador.</p>
       </details>
     </section>
 
@@ -334,9 +369,33 @@
     ["¿Cuántos riñones necesita una persona para vivir?","Con uno solo puede vivir, porque el riñón que queda hace todo el trabajo."]
   ];
 
-  var N = 24;
-  var DEFAULT_NAMES = [];
-  for (var d = 1; d <= N; d++) DEFAULT_NAMES.push("Estudiante " + d);
+  var ROSTER = [
+    "Estudiante 1",
+    "Estudiante 2",
+    "Estudiante 3",
+    "Estudiante 4",
+    "Estudiante 5",
+    "Estudiante 6",
+    "Estudiante 7",
+    "Estudiante 8",
+    "Estudiante 9",
+    "Estudiante 10",
+    "Estudiante 11",
+    "Estudiante 12",
+    "Estudiante 13",
+    "Estudiante 14",
+    "Estudiante 15",
+    "Estudiante 16",
+    "Estudiante 17",
+    "Estudiante 18",
+    "Estudiante 19",
+    "Estudiante 20",
+    "Estudiante 21",
+    "Estudiante 22",
+    "Estudiante 23",
+    "Estudiante 24",
+    "Estudiante 25"
+  ];
 
   var SEG = [
     {bg:"--crimson", fg:"#FFFFFF"},
@@ -345,8 +404,24 @@
     {bg:"--petrol",  fg:"#FFFFFF"}
   ];
 
-  var names = DEFAULT_NAMES.slice();
+  function shortLabel(full){
+    var w = String(full).trim().split(/\s+/);
+    if(w.length >= 4) return w[0] + " " + w[2];
+    if(w.length === 3) return w[0] + " " + w[1];
+    return w.join(" ");
+  }
+
+  var names = ROSTER.slice();
+  var labels = names.map(shortLabel);
+  var N = names.length;
   var used = new Array(N).fill(false);
+
+  function setRoster(list){
+    names = list;
+    labels = names.map(shortLabel);
+    N = names.length;
+    used = new Array(N).fill(false);
+  }
   var rot = -7;
   var spinning = false;
   var deck = [];
@@ -363,19 +438,19 @@
   /* ---------- storage (best effort) ---------- */
   function load(){
     try{
-      var raw = localStorage.getItem("ruleta-excretor-names");
+      var raw = localStorage.getItem("ruleta-excretor-roster-v2");
       if(!raw) return;
       var arr = JSON.parse(raw);
-      if(Array.isArray(arr) && arr.length) names = normalize(arr);
+      if(Array.isArray(arr) && arr.length > 1) setRoster(normalize(arr));
     }catch(e){}
   }
   function save(){
-    try{ localStorage.setItem("ruleta-excretor-names", JSON.stringify(names)); }catch(e){}
+    try{ localStorage.setItem("ruleta-excretor-roster-v2", JSON.stringify(names)); }catch(e){}
   }
   function normalize(arr){
-    var out = arr.map(function(s){ return String(s).trim(); }).filter(Boolean).slice(0, N);
-    while(out.length < N) out.push("Estudiante " + (out.length + 1));
-    return out;
+    var out = arr.map(function(s){ return String(s).replace(/\s+/g, " ").trim(); })
+                 .filter(Boolean).slice(0, 40);
+    return out.length > 1 ? out : ROSTER.slice();
   }
 
   /* ---------- deck ---------- */
@@ -399,7 +474,7 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
   function shorten(s){
-    return s.length > 14 ? s.slice(0, 13) + "…" : s;
+    return s.length > 19 ? s.slice(0, 18) + "…" : s;
   }
   function render(){
     var dpr = window.devicePixelRatio || 1;
@@ -414,7 +489,7 @@
     var line = cssVar("--paper");
     var usedBg = cssVar("--seg-used");
     var usedFg = cssVar("--seg-used-fg");
-    var fontSize = Math.max(9, Math.round(size * 0.033));
+    var fontSize = Math.max(8, Math.min(15, Math.round(size * 0.030)));
 
     ctx.save();
     ctx.translate(cx, cy);
@@ -426,7 +501,9 @@
       ctx.moveTo(0, 0);
       ctx.arc(0, 0, r, a0, a1);
       ctx.closePath();
-      ctx.fillStyle = used[i] ? usedBg : cssVar(SEG[i % SEG.length].bg);
+      var ci = i % SEG.length;
+      if(i === N - 1 && ci === 0) ci = 2;
+      ctx.fillStyle = used[i] ? usedBg : cssVar(SEG[ci].bg);
       ctx.fill();
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = line;
@@ -436,9 +513,9 @@
       ctx.rotate(a0 + step / 2);
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = used[i] ? usedFg : SEG[i % SEG.length].fg;
+      ctx.fillStyle = used[i] ? usedFg : SEG[ci].fg;
       ctx.font = "600 " + fontSize + 'px "IBM Plex Sans", system-ui, sans-serif';
-      ctx.fillText(shorten(names[i]), r - 14, 0);
+      ctx.fillText(shorten(labels[i]), r - 14, 0);
       ctx.restore();
     }
     ctx.restore();
@@ -511,7 +588,7 @@
     used[index] = true;
     render();
     turnEl.classList.remove("idle");
-    turnEl.querySelector(".label").textContent = "Turno · Estudiante " + (index + 1);
+    turnEl.querySelector(".label").textContent = "Turno · N.º " + (index + 1) + " de la lista";
     whoEl.textContent = names[index];
     showQuestions(drawQuestions());
     updateTally();
@@ -582,10 +659,16 @@
   });
 
   document.getElementById("apply-names").addEventListener("click", function(){
-    names = normalize(namesInput.value.split("\n"));
+    setRoster(normalize(namesInput.value.split("\n")));
     namesInput.value = names.join("\n");
     save();
+    turnEl.classList.add("idle");
+    turnEl.querySelector(".label").textContent = "Turno";
+    whoEl.textContent = "Gira la ruleta para elegir al primer estudiante.";
+    qsEl.textContent = "";
+    spinBtn.textContent = "Girar la ruleta";
     render();
+    updateTally();
   });
 
   window.addEventListener("resize", render);
@@ -598,7 +681,70 @@
   render();
   updateTally();
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+
+  window.__ruleta = {
+    load: function(list){
+      setRoster(normalize(list));
+      namesInput.value = names.join("\n");
+      render();
+      updateTally();
+    }
+  };
 })();
 </script>
+
+<script>
+(function(){
+  "use strict";
+  var BLOB = {"v":1,"iter":600000,"salt":"zi2vlw3q48wEuYHhCC10xQ==","iv":"g5B1M6YQpQGpGMhd","ct":"RcSR97TM2iihh22tF2zD7K2M0CJxFHLSqZg2sLZbAA+pNuRCI3s5m9CHDgdsH9mqhXPrhpHD+Ynccth/X8q3AcuZdJLDFltQScERMh2G9H3f2avbpdvhTLDLeCs09C+v8bJlAI1pk8RAiIEcoF1fAt5aiOcr+uis6aZxN9N/6NP7guSM/A/F7P/bIlRKZnjRNmzZDZGZhqTunh/7bEYNaIdgWa0V6Rlg91qs3oEoQXJJoBpK9obVSGCtsZ6X/0ORCJzjTdQuF1gxSyBXOJsTc6x36mVZSyHBXGr9fbWEeM46+BiM8Awiq47q+nWDtJuhLbe/Rcn6fkwZCEZOyGT7fLCkUKkxGGKeGGGc07iT/GU/1Y9ZStj/UqXm02nE8n9rzo1RAVBGwQfTzbwpchtXwMCT0SEilNwh8xcXNME45952EaL0HA4gGWA5oL1Ijs+ZqKQuQFKvu/KWNht5Rt+GMX5wjhVN/yNV+iZX3gB1nOrjT0G3kDa4e99c6/fjXXNnUPm5KrPlAppUaF5iEMLslfu5/fAAuCMO8idPZ89S1vRx8eKwLrPNzEHWhWek8Toy3hCq8dCGbEMu4A+BZFr0mzzuJXHH+pLi2FGQEHNrMmH7/R3/2zITLqujXJFgrvDhUfu8iZrQ9D6xIhZ216UfjsvranypF/M5Uqr/xZyJOQ5DPjMCaSkBSt1E0nTUn5dwiFJXcgR8MgBlMeTCz1a002Ha6pARfHe5AGGugpANTcIT14A2OOJ1DrVTrrwxY7W3sx/62ScAkeKXrRLijoMBs817jEAuGT9aArzaVpikCgOwEMVyBWPn3pa7aPaGcGskE77Sptw/VdiDHUQIL30fQyXoYFJoE4u2MTOgTGl66aEJYPdNRXZgCdYO"};
+  var gate = document.getElementById("gate");
+  var form = document.getElementById("gate-form");
+  var pass = document.getElementById("gate-pass");
+  var err  = document.getElementById("gate-error");
+  var btn  = document.getElementById("gate-go");
+
+  function bytes(b64){
+    var bin = atob(b64), out = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function unlock(password){
+    var subtle = window.crypto && window.crypto.subtle;
+    if(!subtle) return Promise.reject(new Error("WebCrypto no disponible"));
+    return subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"])
+      .then(function(base){
+        return subtle.deriveKey(
+          {name:"PBKDF2", salt:bytes(BLOB.salt), iterations:BLOB.iter, hash:"SHA-256"},
+          base, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+      })
+      .then(function(key){
+        return subtle.decrypt({name:"AES-GCM", iv:bytes(BLOB.iv)}, key, bytes(BLOB.ct));
+      })
+      .then(function(buf){ return JSON.parse(new TextDecoder().decode(buf)); });
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    err.hidden = true;
+    btn.disabled = true;
+    btn.textContent = "Comprobando\u2026";
+    unlock(pass.value).then(function(list){
+      window.__ruleta.load(list);
+      document.body.classList.remove("locked");
+      gate.parentNode.removeChild(gate);
+    }).catch(function(){
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+      err.hidden = false;
+      pass.focus();
+      pass.select();
+    });
+  });
+
+  pass.focus();
+})();
+</script>
+
 </body>
 </html>
