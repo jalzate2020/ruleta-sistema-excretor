@@ -132,6 +132,13 @@
   }
   .ghost:hover{border-color:var(--ink);color:var(--ink)}
   .ghost:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .seg{display:flex;flex:2 1 auto;gap:-1px}
+  .seg .ghost{flex:1 1 0;border-radius:0}
+  .seg .ghost:first-child{border-radius:2px 0 0 2px}
+  .seg .ghost:last-child{border-radius:0 2px 2px 0}
+  .seg .ghost + .ghost{margin-left:-1px}
+  .ghost.is-on{border-color:var(--teal);color:var(--teal);background:var(--surface);z-index:1}
+  .ghost.is-off{opacity:.5;text-decoration:line-through}
 
   details.names{border-top:1px solid var(--line);padding-top:12px}
   details.names summary{
@@ -280,6 +287,14 @@
         <button class="ghost" id="reset">Reiniciar turnos</button>
         <button class="ghost" id="shuffle-qs">Barajar preguntas</button>
       </div>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Duración del giro">
+          <button class="ghost dur" id="dur-15" data-ms="15000">15 s</button>
+          <button class="ghost dur" id="dur-30" data-ms="30000">30 s</button>
+          <button class="ghost dur is-on" id="dur-60" data-ms="60000" aria-pressed="true">1 min</button>
+        </div>
+        <button class="ghost" id="sound" aria-pressed="true">♪ Música</button>
+      </div>
       <details class="names">
         <summary>Editar la lista de estudiantes</summary>
         <textarea id="names-input" spellcheck="false" aria-label="Lista de nombres, uno por línea"></textarea>
@@ -425,6 +440,7 @@
   var rot = -7;
   var spinning = false;
   var deck = [];
+  var spinMs = 60000;
 
   var canvas = document.getElementById("wheel");
   var ctx = canvas.getContext("2d");
@@ -529,6 +545,114 @@
     ctx.stroke();
   }
 
+  /* ---------- galope sintetizado (Rossini, obertura de Guillermo Tell) ----
+     La composición es de dominio público; aquí se sintetiza con WebAudio
+     para no depender de ninguna grabación ni de la red.                  */
+  var music = (function(){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    var ctx = null, master = null, noise = null, timer = null;
+    var on = true;
+
+    var TICK = 0.135;
+    var RHYTHM = [1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2];
+    var PHRASES = [
+      [72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72],
+      [67, 67, 67, 67, 67, 67, 67, 67, 67, 67, 67],
+      [72, 72, 72, 72, 72, 72, 72, 76, 79, 79, 79],
+      [79, 76, 72, 79, 76, 72, 72, 74, 76, 77, 79]
+    ];
+    var nextAt = 0, phrase = 0, step = 0, endAt = 0;
+
+    function hz(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
+
+    function boot(){
+      if(ctx || !AC) return ctx;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0.55;
+      master.connect(ctx.destination);
+      var len = Math.floor(ctx.sampleRate * 0.09);
+      noise = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = noise.getChannelData(0);
+      for(var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 7);
+      return ctx;
+    }
+
+    function tone(at, f, dur, type, vol){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(vol, at + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(g); g.connect(master);
+      o.start(at); o.stop(at + dur + 0.03);
+    }
+
+    function hoof(at, vol){
+      var s = ctx.createBufferSource(), g = ctx.createGain();
+      s.buffer = noise;
+      g.gain.value = vol;
+      s.connect(g); g.connect(master);
+      s.start(at);
+    }
+
+    function pump(){
+      while(nextAt < ctx.currentTime + 0.4 && nextAt < endAt){
+        var beats = RHYTHM[step];
+        var note = PHRASES[phrase][step];
+        var span = beats * TICK;
+        tone(nextAt, hz(note), Math.min(span * 0.9, 0.45), "square", 0.15);
+        tone(nextAt, hz(note - 12), Math.min(span * 0.9, 0.45), "triangle", 0.06);
+        for(var k = 0; k < beats; k++){
+          var at = nextAt + k * TICK;
+          hoof(at, 0.13);
+          hoof(at + TICK * 0.40, 0.08);
+          tone(at, hz((step % 4 < 2) ? 36 : 31), TICK * 0.75, "sawtooth", 0.11);
+        }
+        nextAt += span;
+        step++;
+        if(step >= RHYTHM.length){ step = 0; phrase = (phrase + 1) % PHRASES.length; }
+      }
+      if(ctx.currentTime > endAt + 0.5) halt();
+    }
+
+    function halt(){
+      if(timer){ clearInterval(timer); timer = null; }
+    }
+
+    return {
+      get on(){ return on; },
+      toggle: function(){ on = !on; if(!on) this.stop(); return on; },
+      start: function(ms){
+        if(!on || !boot()) return;
+        if(ctx.state === "suspended") ctx.resume();
+        halt();
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(0.55, ctx.currentTime);
+        nextAt = ctx.currentTime + 0.08;
+        endAt = nextAt + ms / 1000;
+        phrase = 0; step = 0;
+        pump();
+        timer = setInterval(pump, 45);
+      },
+      fanfare: function(){
+        if(!on || !ctx) return;
+        var at = ctx.currentTime + 0.05;
+        [72, 76, 79, 84].forEach(function(n, i){
+          tone(at + i * 0.075, hz(n), 0.75, "square", 0.17);
+        });
+      },
+      stop: function(){
+        halt();
+        if(!ctx) return;
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+      }
+    };
+  })();
+
   /* ---------- spin ---------- */
   function remaining(){
     return used.reduce(function(acc, u){ return acc + (u ? 0 : 1); }, 0);
@@ -538,6 +662,17 @@
     tallyEl.textContent = left;
     spinBtn.disabled = spinning || left === 0;
     if(left === 0 && !spinning) spinBtn.textContent = "Ya pasaron todos";
+  }
+
+  /* Trapezoidal speed: accelerate, hold, then brake into the target.
+     A plain ease-out would spend a 60 s spin looking frozen. */
+  function profile(t){
+    var up = 0.12, down = 0.35, hold = 1 - up - down;
+    var peak = 1 / (up / 2 + hold + down / 2);
+    if(t < up) return peak * t * t / (2 * up);
+    if(t < up + hold) return peak * (up / 2 + (t - up));
+    var u = t - (up + hold);
+    return peak * (up / 2 + hold + u - u * u / (2 * down));
   }
 
   function spin(){
@@ -554,23 +689,29 @@
     var delta = ((desired - current) % 360 + 360) % 360;
 
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var turns = reduced ? 0 : 5;
-    var duration = reduced ? 220 : 4200;
+    var duration = reduced ? 1500 : spinMs;
+    // Roughly 0.7 revolutions per second, so a long spin keeps a believable pace.
+    var turns = reduced ? 2 : Math.max(5, Math.round(duration / 1000 * 0.7));
     var from = rot;
     var to = rot + turns * 360 + delta;
     var t0 = performance.now();
+    var shown = -1;
 
     spinning = true;
     spinBtn.disabled = true;
-    spinBtn.textContent = "Girando…";
     turnEl.classList.add("idle");
     whoEl.textContent = "Girando la ruleta…";
+    music.start(duration);
 
     function frame(now){
       var p = Math.min(1, (now - t0) / duration);
-      var eased = 1 - Math.pow(1 - p, 4);
-      rot = from + (to - from) * eased;
+      rot = from + (to - from) * profile(p);
       render();
+      var left = Math.ceil((duration - (now - t0)) / 1000);
+      if(left !== shown){
+        shown = left;
+        spinBtn.textContent = left > 0 ? "Girando… " + left + " s" : "Girando…";
+      }
       if(p < 1){
         requestAnimationFrame(frame);
       }else{
@@ -578,6 +719,8 @@
         render();
         spinning = false;
         spinBtn.textContent = "Girar la ruleta";
+        music.stop();
+        music.fanfare();
         announce(pick);
       }
     }
@@ -639,6 +782,26 @@
   canvas.addEventListener("click", spin);
   canvas.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); spin(); }
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".dur"), function(b){
+    b.addEventListener("click", function(){
+      if(spinning) return;
+      spinMs = parseInt(b.getAttribute("data-ms"), 10);
+      Array.prototype.forEach.call(document.querySelectorAll(".dur"), function(o){
+        var active = o === b;
+        o.classList.toggle("is-on", active);
+        o.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    });
+  });
+
+  var soundBtn = document.getElementById("sound");
+  soundBtn.addEventListener("click", function(){
+    var on = music.toggle();
+    soundBtn.classList.toggle("is-off", !on);
+    soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    soundBtn.textContent = on ? "♪ Música" : "♪ Sin música";
   });
 
   document.getElementById("reset").addEventListener("click", function(){
