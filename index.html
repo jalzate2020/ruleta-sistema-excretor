@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Ruleta de turnos con preguntas sobre la estructura del sistema excretor para grado 5.º.">
+<style>
+  :root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>Ruleta del Sistema Excretor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --paper:#E9EEEC;
+    --surface:#FFFFFF;
+    --surface-2:#F3F7F5;
+    --ink:#16242B;
+    --muted:#5C7077;
+    --line:#D0DAD8;
+    --crimson:#9E2B38;
+    --teal:#1B6F6C;
+    --amber:#C2851C;
+    --petrol:#2F4F5C;
+    --seg-used:#BCC8C6;
+    --seg-used-fg:#5C7077;
+    --focus:#1B6F6C;
+    --shadow:0 1px 0 rgba(22,36,43,.04), 0 12px 32px -18px rgba(22,36,43,.45);
+  }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E181D;
+    --surface:#16252B;
+    --surface-2:#1B2F36;
+    --ink:#E6EEEC;
+    --muted:#93A8AE;
+    --line:#273C44;
+    --crimson:#D9616D;
+    --teal:#4EBDB7;
+    --amber:#E8AE45;
+    --petrol:#7FA3B0;
+    --seg-used:#24383F;
+    --seg-used-fg:#7A8F96;
+    --focus:#4EBDB7;
+    --shadow:0 1px 0 rgba(0,0,0,.2), 0 16px 40px -22px rgba(0,0,0,.8);
+  }
+}
+  :root[data-theme="dark"]{
+    --paper:#0E181D;
+    --surface:#16252B;
+    --surface-2:#1B2F36;
+    --ink:#E6EEEC;
+    --muted:#93A8AE;
+    --line:#273C44;
+    --crimson:#D9616D;
+    --teal:#4EBDB7;
+    --amber:#E8AE45;
+    --petrol:#7FA3B0;
+    --seg-used:#24383F;
+    --seg-used-fg:#7A8F96;
+    --focus:#4EBDB7;
+    --shadow:0 1px 0 rgba(0,0,0,.2), 0 16px 40px -22px rgba(0,0,0,.8);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 56px}
+
+  /* ---------- header ---------- */
+  .masthead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;border-bottom:2px solid var(--ink);padding-bottom:16px}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);
+    display:flex;align-items:center;gap:8px;margin:0 0 6px
+  }
+  .eyebrow::before{content:"";width:22px;height:2px;background:var(--teal);display:block}
+  h1{
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;
+    font-weight:800;font-size:clamp(30px,5.2vw,50px);line-height:.98;letter-spacing:-.02em;
+    margin:0;text-wrap:balance;
+  }
+  h1 em{font-style:normal;color:var(--crimson)}
+  .masthead p{margin:6px 0 0;color:var(--muted);max-width:44ch;font-size:15px}
+  .tally{
+    margin-left:auto;text-align:right;font-family:"IBM Plex Mono",monospace;
+  }
+  .tally b{display:block;font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .tally span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- layout ---------- */
+  .stage{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:40px;margin-top:32px;align-items:start}
+  @media (max-width:820px){ .stage{grid-template-columns:1fr;gap:32px} }
+
+  /* ---------- wheel ---------- */
+  .wheel-col{display:flex;flex-direction:column;gap:16px}
+  .wheel-box{position:relative;width:100%;aspect-ratio:1;max-width:100%}
+  canvas{width:100%;height:100%;display:block;cursor:pointer;border-radius:50%}
+  canvas:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+  .needle{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;
+    border-top:26px solid var(--ink);filter:drop-shadow(0 2px 3px rgba(0,0,0,.25));pointer-events:none;z-index:2
+  }
+  .spin{
+    width:100%;border:0;border-radius:2px;background:var(--crimson);color:#fff;
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;font-size:19px;letter-spacing:.01em;
+    padding:16px;cursor:pointer;transition:transform .12s ease, filter .12s ease;
+  }
+  .spin:hover:not(:disabled){filter:brightness(1.08)}
+  .spin:active:not(:disabled){transform:translateY(2px)}
+  .spin:disabled{background:var(--seg-used);color:var(--seg-used-fg);cursor:not-allowed}
+  .spin:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+  .ghost{
+    flex:1 1 auto;background:none;border:1px solid var(--line);color:var(--muted);
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    padding:9px 12px;border-radius:2px;cursor:pointer
+  }
+  .ghost:hover{border-color:var(--ink);color:var(--ink)}
+  .ghost:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  details.names{border-top:1px solid var(--line);padding-top:12px}
+  details.names summary{
+    cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted);list-style:none
+  }
+  details.names summary::-webkit-details-marker{display:none}
+  details.names summary::before{content:"+ ";color:var(--teal)}
+  details[open].names summary::before{content:"– "}
+  details.names textarea{
+    width:100%;margin-top:10px;min-height:150px;resize:vertical;padding:10px;
+    background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:2px;
+    font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.7
+  }
+  details.names textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .hint{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+
+  /* ---------- turn panel ---------- */
+  .turn{
+    background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--crimson);
+    border-radius:2px;padding:20px 22px;box-shadow:var(--shadow)
+  }
+  .turn .label{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:0
+  }
+  .turn .who{
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;
+    font-size:clamp(26px,4.4vw,40px);line-height:1.04;letter-spacing:-.02em;margin:4px 0 0;text-wrap:balance
+  }
+  .turn.idle{border-left-color:var(--teal)}
+  .turn.idle .who{font-size:clamp(20px,3vw,26px);color:var(--muted);font-weight:600}
+
+  .qhead{
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    margin:32px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)
+  }
+  .qhead h2{
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:600;
+    font-size:15px;letter-spacing:.02em;margin:0;text-transform:uppercase
+  }
+  .qhead span{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.08em}
+
+  ol.qs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+  ol.qs li{
+    display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 16px;
+    background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:16px 18px
+  }
+  .num{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--amber);
+    font-variant-numeric:tabular-nums;padding-top:2px
+  }
+  .q{font-size:17px;font-weight:500;margin:0;line-height:1.4;text-wrap:pretty}
+  .reveal{
+    grid-column:2;justify-self:start;margin-top:10px;background:none;border:0;padding:0;cursor:pointer;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--teal);border-bottom:1px solid currentColor
+  }
+  .reveal:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+  .a{
+    grid-column:2;margin:10px 0 0;padding:12px 14px;background:var(--surface-2);
+    border-left:2px solid var(--teal);font-size:15.5px;color:var(--ink);line-height:1.45
+  }
+  .a b{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--teal);display:block;margin-bottom:3px;font-weight:600}
+
+  .diagram{
+    margin-top:36px;padding-top:20px;border-top:1px solid var(--line)
+  }
+  .diagram h2{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 14px
+  }
+  .route{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .route .stop{
+    background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:7px 12px;
+    font-size:13.5px;font-weight:500
+  }
+  .route .stop small{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .route .arrow{color:var(--amber);font-weight:700}
+
+  footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Ciencias Naturales · Grado 5.º</p>
+      <h1>Ruleta del <em>Sistema Excretor</em></h1>
+      <p>Gira la ruleta, sale un estudiante y aparecen sus 4 preguntas sobre la estructura del sistema excretor.</p>
+    </div>
+    <div class="tally">
+      <b id="tally-num">24</b>
+      <span>por pasar</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <section class="wheel-col">
+      <div class="wheel-box">
+        <div class="needle"></div>
+        <canvas id="wheel" tabindex="0" role="button" aria-label="Ruleta de estudiantes. Presiona para girar."></canvas>
+      </div>
+      <button class="spin" id="spin">Girar la ruleta</button>
+      <div class="toolbar">
+        <button class="ghost" id="reset">Reiniciar turnos</button>
+        <button class="ghost" id="shuffle-qs">Barajar preguntas</button>
+      </div>
+      <details class="names">
+        <summary>Editar los 24 nombres</summary>
+        <textarea id="names-input" spellcheck="false" aria-label="Lista de nombres, uno por línea"></textarea>
+        <button class="ghost" id="apply-names" style="margin-top:10px">Aplicar nombres</button>
+        <p class="hint">Un nombre por línea. Los nombres se guardan en este navegador.</p>
+      </details>
+    </section>
+
+    <section>
+      <div class="turn idle" id="turn">
+        <p class="label">Turno</p>
+        <p class="who" id="who">Gira la ruleta para elegir al primer estudiante.</p>
+      </div>
+
+      <div class="qhead">
+        <h2>Preguntas</h2>
+        <span id="qcount">4 por turno</span>
+      </div>
+      <ol class="qs" id="qs"></ol>
+
+      <div class="diagram">
+        <h2>Recorrido de la orina</h2>
+        <div class="route">
+          <span class="stop">Nefrona<small>Filtra</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Pelvis renal<small>Recoge</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Uréter<small>Transporta</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Vejiga<small>Almacena</small></span>
+          <span class="arrow">→</span>
+          <span class="stop">Uretra<small>Expulsa</small></span>
+        </div>
+      </div>
+
+      <footer>Los riñones filtran unos 180 litros de sangre al día y producen entre 1 y 2 litros de orina.</footer>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var BANK = [
+    ["¿Cuáles son los dos órganos con forma de fríjol que filtran la sangre?","Los riñones."],
+    ["¿En qué parte del cuerpo están ubicados los riñones?","En la parte de atrás del abdomen, uno a cada lado de la columna vertebral, debajo de las costillas."],
+    ["¿Cómo se llama el tubo que lleva la orina desde el riñón hasta la vejiga?","El uréter."],
+    ["¿Cuántos uréteres tiene el cuerpo humano y por qué?","Dos: uno por cada riñón."],
+    ["¿Qué órgano guarda la orina hasta el momento de orinar?","La vejiga urinaria."],
+    ["¿Cómo se llama el conducto por donde sale la orina al exterior?","La uretra."],
+    ["¿Cuál es la unidad más pequeña del riñón, la que hace la filtración?","La nefrona."],
+    ["¿Cuántas nefronas tiene aproximadamente cada riñón?","Alrededor de un millón."],
+    ["¿Cómo se llama la capa externa del riñón?","La corteza renal."],
+    ["¿Cómo se llama la capa interna del riñón, donde están las pirámides?","La médula renal."],
+    ["¿Qué es la pelvis renal?","La cavidad en forma de embudo donde se junta la orina antes de pasar al uréter."],
+    ["¿Cómo se llama el ovillo de capilares donde empieza la filtración de la sangre?","El glomérulo."],
+    ["¿Qué estructura rodea al glomérulo como una copa?","La cápsula de Bowman."],
+    ["¿Por cuál vaso sanguíneo entra al riñón la sangre con desechos?","Por la arteria renal."],
+    ["¿Por cuál vaso sanguíneo sale del riñón la sangre ya limpia?","Por la vena renal."],
+    ["Además de los riñones, ¿qué órgano elimina desechos en forma de sudor?","La piel, por medio de las glándulas sudoríparas."],
+    ["¿Qué órgano expulsa el dióxido de carbono del cuerpo?","Los pulmones."],
+    ["¿Cómo se llama el líquido de desecho que producen los riñones?","La orina."],
+    ["¿De qué está formada principalmente la orina?","Casi toda es agua (cerca del 95 %), más urea y sales minerales."],
+    ["¿Cómo se llama el desecho que se forma cuando el cuerpo descompone las proteínas?","La urea."],
+    ["¿Cuánta orina puede almacenar la vejiga de una persona?","Entre 300 y 500 mililitros, más o menos medio litro."],
+    ["¿Qué músculo controla la salida de la orina por la uretra?","El esfínter uretral."],
+    ["¿Qué le pasaría a una persona si sus dos riñones dejaran de funcionar?","Se le acumularían desechos tóxicos en la sangre y necesitaría diálisis o un trasplante."],
+    ["¿Cómo se llama el tratamiento con una máquina que hace el trabajo del riñón?","La diálisis."],
+    ["Nombra en orden el recorrido que hace la orina dentro del cuerpo.","Nefrona → pelvis renal → uréter → vejiga → uretra."],
+    ["¿Qué forma y qué tamaño tiene un riñón?","Forma de fríjol y mide unos 11 o 12 centímetros, parecido a un puño cerrado."],
+    ["¿Cuál es la función principal del sistema excretor?","Eliminar los desechos y el exceso de agua y de sales que hay en la sangre."],
+    ["¿Qué son las pirámides renales?","Estructuras en forma de cono que están en la médula renal y llevan la orina hacia los cálices."],
+    ["¿Qué son los cálices renales?","Pequeñas cavidades que recogen la orina de las pirámides y la pasan a la pelvis renal."],
+    ["¿El hígado ayuda al sistema excretor? ¿Cómo?","Sí: convierte el amoníaco, que es muy tóxico, en urea, y además produce la bilis."],
+    ["¿Qué es el túbulo renal de la nefrona?","El tubo donde el riñón devuelve a la sangre el agua y los nutrientes que todavía sirven."],
+    ["¿Qué significa que el riñón hace «reabsorción»?","Que recupera y devuelve a la sangre el agua y las sustancias útiles que había filtrado."],
+    ["¿Cuánta sangre filtran los riñones en un día?","Unos 180 litros de filtrado, de los cuales solo salen 1 o 2 litros de orina."],
+    ["¿Por qué la orina es de color amarillo?","Por un pigmento llamado urocromo."],
+    ["¿Qué le pasa al color de la orina cuando tomas poca agua?","Se pone más oscura porque está más concentrada."],
+    ["Menciona dos hábitos que cuidan los riñones.","Tomar suficiente agua y comer con poca sal; también, no aguantarse las ganas de orinar."],
+    ["¿Qué glándula está ubicada justo encima de cada riñón?","La glándula suprarrenal."],
+    ["¿Cómo se llama la membrana que envuelve y protege al riñón?","La cápsula renal."],
+    ["¿Por qué el sudor se considera parte de la excreción?","Porque con él se eliminan agua, sales y un poco de urea a través de la piel."],
+    ["¿Cuál órgano del sistema excretor es un músculo elástico que se estira?","La vejiga, que se estira a medida que se llena de orina."],
+    ["¿Qué diferencia hay entre el uréter y la uretra?","El uréter va del riñón a la vejiga; la uretra va de la vejiga al exterior."],
+    ["¿Cuántos riñones necesita una persona para vivir?","Con uno solo puede vivir, porque el riñón que queda hace todo el trabajo."]
+  ];
+
+  var N = 24;
+  var DEFAULT_NAMES = [];
+  for (var d = 1; d <= N; d++) DEFAULT_NAMES.push("Estudiante " + d);
+
+  var SEG = [
+    {bg:"--crimson", fg:"#FFFFFF"},
+    {bg:"--teal",    fg:"#FFFFFF"},
+    {bg:"--amber",   fg:"#1E1405"},
+    {bg:"--petrol",  fg:"#FFFFFF"}
+  ];
+
+  var names = DEFAULT_NAMES.slice();
+  var used = new Array(N).fill(false);
+  var rot = -7;
+  var spinning = false;
+  var deck = [];
+
+  var canvas = document.getElementById("wheel");
+  var ctx = canvas.getContext("2d");
+  var spinBtn = document.getElementById("spin");
+  var whoEl = document.getElementById("who");
+  var turnEl = document.getElementById("turn");
+  var qsEl = document.getElementById("qs");
+  var tallyEl = document.getElementById("tally-num");
+  var namesInput = document.getElementById("names-input");
+
+  /* ---------- storage (best effort) ---------- */
+  function load(){
+    try{
+      var raw = localStorage.getItem("ruleta-excretor-names");
+      if(!raw) return;
+      var arr = JSON.parse(raw);
+      if(Array.isArray(arr) && arr.length) names = normalize(arr);
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem("ruleta-excretor-names", JSON.stringify(names)); }catch(e){}
+  }
+  function normalize(arr){
+    var out = arr.map(function(s){ return String(s).trim(); }).filter(Boolean).slice(0, N);
+    while(out.length < N) out.push("Estudiante " + (out.length + 1));
+    return out;
+  }
+
+  /* ---------- deck ---------- */
+  function shuffle(a){
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function refillDeck(){
+    deck = shuffle(BANK.map(function(_, i){ return i; }));
+  }
+  function drawQuestions(){
+    if(deck.length < 4) refillDeck();
+    return deck.splice(0, 4).map(function(i){ return BANK[i]; });
+  }
+
+  /* ---------- wheel drawing ---------- */
+  function cssVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function shorten(s){
+    return s.length > 14 ? s.slice(0, 13) + "…" : s;
+  }
+  function render(){
+    var dpr = window.devicePixelRatio || 1;
+    var size = canvas.clientWidth || 360;
+    canvas.width = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+
+    var cx = size / 2, cy = size / 2, r = size / 2 - 3;
+    var step = (Math.PI * 2) / N;
+    var line = cssVar("--paper");
+    var usedBg = cssVar("--seg-used");
+    var usedFg = cssVar("--seg-used-fg");
+    var fontSize = Math.max(9, Math.round(size * 0.033));
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot * Math.PI / 180);
+
+    for(var i = 0; i < N; i++){
+      var a0 = i * step, a1 = a0 + step;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = used[i] ? usedBg : cssVar(SEG[i % SEG.length].bg);
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = line;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.rotate(a0 + step / 2);
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = used[i] ? usedFg : SEG[i % SEG.length].fg;
+      ctx.font = "600 " + fontSize + 'px "IBM Plex Sans", system-ui, sans-serif';
+      ctx.fillText(shorten(names[i]), r - 14, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.085, 0, Math.PI * 2);
+    ctx.fillStyle = cssVar("--surface");
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = cssVar("--ink");
+    ctx.stroke();
+  }
+
+  /* ---------- spin ---------- */
+  function remaining(){
+    return used.reduce(function(acc, u){ return acc + (u ? 0 : 1); }, 0);
+  }
+  function updateTally(){
+    var left = remaining();
+    tallyEl.textContent = left;
+    spinBtn.disabled = spinning || left === 0;
+    if(left === 0 && !spinning) spinBtn.textContent = "Ya pasaron todos";
+  }
+
+  function spin(){
+    if(spinning) return;
+    var pool = [];
+    for(var i = 0; i < N; i++) if(!used[i]) pool.push(i);
+    if(!pool.length) return;
+
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var step = 360 / N;
+    var center = pick * step + step / 2;
+    var desired = ((-90 - center) % 360 + 360) % 360;
+    var current = ((rot % 360) + 360) % 360;
+    var delta = ((desired - current) % 360 + 360) % 360;
+
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var turns = reduced ? 0 : 5;
+    var duration = reduced ? 220 : 4200;
+    var from = rot;
+    var to = rot + turns * 360 + delta;
+    var t0 = performance.now();
+
+    spinning = true;
+    spinBtn.disabled = true;
+    spinBtn.textContent = "Girando…";
+    turnEl.classList.add("idle");
+    whoEl.textContent = "Girando la ruleta…";
+
+    function frame(now){
+      var p = Math.min(1, (now - t0) / duration);
+      var eased = 1 - Math.pow(1 - p, 4);
+      rot = from + (to - from) * eased;
+      render();
+      if(p < 1){
+        requestAnimationFrame(frame);
+      }else{
+        rot = to;
+        render();
+        spinning = false;
+        spinBtn.textContent = "Girar la ruleta";
+        announce(pick);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function announce(index){
+    used[index] = true;
+    render();
+    turnEl.classList.remove("idle");
+    turnEl.querySelector(".label").textContent = "Turno · Estudiante " + (index + 1);
+    whoEl.textContent = names[index];
+    showQuestions(drawQuestions());
+    updateTally();
+    turnEl.scrollIntoView({behavior: "smooth", block: "nearest"});
+  }
+
+  function showQuestions(list){
+    qsEl.textContent = "";
+    list.forEach(function(pair, i){
+      var li = document.createElement("li");
+
+      var num = document.createElement("span");
+      num.className = "num";
+      num.textContent = String(i + 1).padStart(2, "0");
+
+      var q = document.createElement("p");
+      q.className = "q";
+      q.textContent = pair[0];
+
+      var btn = document.createElement("button");
+      btn.className = "reveal";
+      btn.type = "button";
+      btn.textContent = "Ver respuesta";
+
+      var ans = document.createElement("p");
+      ans.className = "a";
+      ans.hidden = true;
+      var tag = document.createElement("b");
+      tag.textContent = "Respuesta";
+      ans.appendChild(tag);
+      ans.appendChild(document.createTextNode(pair[1]));
+
+      btn.addEventListener("click", function(){
+        ans.hidden = !ans.hidden;
+        btn.textContent = ans.hidden ? "Ver respuesta" : "Ocultar respuesta";
+      });
+
+      li.appendChild(num);
+      li.appendChild(q);
+      li.appendChild(btn);
+      li.appendChild(ans);
+      qsEl.appendChild(li);
+    });
+  }
+
+  /* ---------- wiring ---------- */
+  spinBtn.addEventListener("click", spin);
+  canvas.addEventListener("click", spin);
+  canvas.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); spin(); }
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){
+    used = new Array(N).fill(false);
+    refillDeck();
+    turnEl.classList.add("idle");
+    turnEl.querySelector(".label").textContent = "Turno";
+    whoEl.textContent = "Gira la ruleta para elegir al primer estudiante.";
+    qsEl.textContent = "";
+    spinBtn.textContent = "Girar la ruleta";
+    render();
+    updateTally();
+  });
+
+  document.getElementById("shuffle-qs").addEventListener("click", function(){
+    refillDeck();
+    if(!turnEl.classList.contains("idle")) showQuestions(drawQuestions());
+  });
+
+  document.getElementById("apply-names").addEventListener("click", function(){
+    names = normalize(namesInput.value.split("\n"));
+    namesInput.value = names.join("\n");
+    save();
+    render();
+  });
+
+  window.addEventListener("resize", render);
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if(mq.addEventListener) mq.addEventListener("change", render);
+
+  load();
+  namesInput.value = names.join("\n");
+  refillDeck();
+  render();
+  updateTally();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
