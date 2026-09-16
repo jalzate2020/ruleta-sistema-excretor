@@ -94,9 +94,11 @@
   }
   h1 em{font-style:normal;color:var(--crimson)}
   .masthead p{margin:6px 0 0;color:var(--muted);max-width:46ch;font-size:15px}
-  .tally{margin-left:auto;text-align:right;font-family:"IBM Plex Mono",monospace}
-  .tally b{display:block;font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
-  .tally span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  .scores{margin-left:auto;display:flex;gap:26px;font-family:"IBM Plex Mono",monospace;text-align:right}
+  .scores b{display:block;font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .scores span{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+  .scores .gifts b{color:var(--crimson)}
 
   /* ---------- layout ---------- */
   .stage{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:40px;margin-top:32px;align-items:start}
@@ -169,6 +171,7 @@
   }
   .turn.idle{border-left-color:var(--teal)}
   .turn.idle .who{font-size:clamp(20px,3vw,26px);color:var(--muted);font-weight:600}
+  .turn.over{border-left-color:var(--amber)}
 
   .qhead{
     display:flex;align-items:baseline;justify-content:space-between;gap:16px;
@@ -215,6 +218,35 @@
   .empty{
     border:1px dashed var(--line);border-radius:2px;padding:34px 24px;margin:0;
     color:var(--muted);text-align:center;font-size:15px
+  }
+
+  /* ---------- verdict ---------- */
+  .judge{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .judge button{
+    flex:1 1 180px;border:0;border-radius:2px;padding:15px 16px;cursor:pointer;
+    font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:800;font-size:16px
+  }
+  .judge button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  #judge-yes{background:var(--teal);color:#fff}
+  #judge-no{background:none;color:var(--muted);border:1px solid var(--line)}
+  #judge-no:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ---------- winners ---------- */
+  .winners{margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
+  .winners h2{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 14px
+  }
+  .winners ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .winners li{
+    display:flex;align-items:baseline;gap:14px;background:var(--surface);
+    border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:2px;padding:11px 15px
+  }
+  .winners .gift{font-size:17px;line-height:1}
+  .winners .name{font-weight:600;flex:1;text-wrap:pretty}
+  .winners .part{
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.11em;
+    text-transform:uppercase;color:var(--teal)
   }
 
   /* ---------- diagram ---------- */
@@ -285,11 +317,17 @@
     <div>
       <p class="eyebrow">Natural Science · Grade 5</p>
       <h1>Excretory System <em>Wheel</em></h1>
-      <p>Spin the wheel to pick a student. One question appears, taken from the four parts the presenters explain. Tap the card to turn it over and check the answer.</p>
+      <p>Four gifts, eight questions. Spin the wheel, read the question, turn the card to check the answer. A right answer wins a gift. The game ends when the last gift is handed out.</p>
     </div>
-    <div class="tally">
-      <b id="tally-num">25</b>
-      <span>left to go</span>
+    <div class="scores">
+      <div class="gifts">
+        <b id="gifts-num">4</b>
+        <span>gifts left</span>
+      </div>
+      <div>
+        <b id="qs-num">8</b>
+        <span>questions left</span>
+      </div>
     </div>
   </header>
 
@@ -301,16 +339,15 @@
       </div>
       <button class="spin" id="spin">Spin the wheel</button>
       <div class="toolbar">
-        <button class="ghost" id="reset">Reset turns</button>
-        <button class="ghost" id="shuffle-qs">Shuffle questions</button>
-      </div>
-      <div class="toolbar">
         <div class="seg" role="group" aria-label="Spin length">
           <button class="ghost dur" id="dur-10" data-ms="10000" aria-pressed="false">10 s</button>
           <button class="ghost dur is-on" id="dur-20" data-ms="20000" aria-pressed="true">20 s</button>
           <button class="ghost dur" id="dur-60" data-ms="60000" aria-pressed="false">1 min</button>
         </div>
         <button class="ghost" id="sound" aria-pressed="true">♪ Music</button>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" id="reset">Start a new game</button>
       </div>
       <details class="names">
         <summary>Edit the student list</summary>
@@ -328,7 +365,7 @@
 
       <div class="qhead">
         <h2>Question</h2>
-        <span id="qtag">One question per student</span>
+        <span id="qtag">4 main questions · 4 spares</span>
       </div>
 
       <p class="empty" id="empty">No question yet. Spin the wheel to get one.</p>
@@ -347,6 +384,16 @@
             <p class="flip-hint">Tap to go back</p>
           </div>
         </div>
+      </div>
+
+      <div class="judge" id="judge" hidden>
+        <button id="judge-yes">Right answer — give a gift</button>
+        <button id="judge-no">Not quite — no gift</button>
+      </div>
+
+      <div class="winners" id="winners" hidden>
+        <h2>Gifts handed out</h2>
+        <ol id="winners-list"></ol>
       </div>
 
       <div class="diagram">
@@ -371,48 +418,22 @@
 (function(){
   "use strict";
 
-  /* Every question is answerable from the four paragraphs in the textbook
-     page, so each presenter can ask the ones for their own part. */
-  var BANK = [
-    /* --- Kidneys · Nicolas --- */
-    {part:"Kidneys", by:"Nicolas", q:"Which organ filters the blood?", a:"The kidneys."},
-    {part:"Kidneys", by:"Nicolas", q:"What do the kidneys turn waste into?", a:"Into urine."},
-    {part:"Kidneys", by:"Nicolas", q:"How many kidneys does the body have?", a:"Two."},
-    {part:"Kidneys", by:"Nicolas", q:"Which organ is the most important one of the excretory system?", a:"The kidneys."},
-    {part:"Kidneys", by:"Nicolas", q:"Do the kidneys make urine or store urine?", a:"They make it. The kidneys transform waste into urine."},
-    {part:"Kidneys", by:"Nicolas", q:"What comes out of the kidneys and carries the urine away?", a:"The two ureters."},
-
-    /* --- Ureters · Thomas --- */
-    {part:"Ureters", by:"Thomas", q:"What do the ureters carry?", a:"The urine."},
-    {part:"Ureters", by:"Thomas", q:"Where do the ureters carry the urine to?", a:"To the bladder."},
-    {part:"Ureters", by:"Thomas", q:"How many ureters are there?", a:"Two, one for each kidney."},
-    {part:"Ureters", by:"Thomas", q:"Which organ do the ureters come out of?", a:"The kidneys."},
-    {part:"Ureters", by:"Thomas", q:"Are the ureters tubes, or organs that store urine?", a:"They are tubes. They only carry the urine."},
-    {part:"Ureters", by:"Thomas", q:"What is the name of the two conduits that come out of the kidneys?", a:"The ureters."},
-
-    /* --- Bladder · Maria Clara --- */
-    {part:"Bladder", by:"Maria Clara", q:"Where does all the urine end up?", a:"In the bladder."},
-    {part:"Bladder", by:"Maria Clara", q:"What does the bladder do with the urine?", a:"It holds it before the urine is eliminated."},
-    {part:"Bladder", by:"Maria Clara", q:"Which organ holds the urine before it leaves the body?", a:"The bladder."},
-    {part:"Bladder", by:"Maria Clara", q:"Does the bladder make urine or store urine?", a:"It stores it. The kidneys are the ones that make it."},
-    {part:"Bladder", by:"Maria Clara", q:"How does the urine get to the bladder?", a:"Through the two ureters."},
-
-    /* --- Urethra · Guadalupe --- */
-    {part:"Urethra", by:"Guadalupe", q:"Which organ takes the urine outside the body?", a:"The urethra."},
-    {part:"Urethra", by:"Guadalupe", q:"Where does the urethra take the urine from?", a:"From the bladder."},
-    {part:"Urethra", by:"Guadalupe", q:"Is the urethra an internal or an external organ?", a:"It is an external organ."},
-    {part:"Urethra", by:"Guadalupe", q:"Which part does the urine pass through last?", a:"The urethra."},
-    {part:"Urethra", by:"Guadalupe", q:"What does the urethra lead out of the body?", a:"The urine."},
-
-    /* --- Whole system --- */
-    {part:"Whole system", by:"everyone", q:"Put these in the right order: bladder, kidneys, ureters, urethra.", a:"Kidneys, ureters, bladder, urethra."},
-    {part:"Whole system", by:"everyone", q:"Which part comes right after the kidneys?", a:"The ureters."},
-    {part:"Whole system", by:"everyone", q:"Which part comes right after the bladder?", a:"The urethra."},
-    {part:"Whole system", by:"everyone", q:"What is the name of the system that removes waste from the body?", a:"The excretory system."},
-
-    /* --- Critical thinking box --- */
-    {part:"Critical thinking", by:"everyone", q:"Can the excretory system work with only one kidney?", a:"Yes. One kidney can do the work of both."}
+  /* Eight questions, all answerable from the four paragraphs on the textbook
+     page. MAIN holds one per presenter and is dealt first, so every presenter
+     asks once. SPARE is the backup set, used only when someone answers wrong. */
+  var MAIN = [
+    {part:"Kidneys",  by:"Nicolas",     q:"Which organ filters the blood and turns the waste into urine?", a:"The kidneys."},
+    {part:"Ureters",  by:"Thomas",      q:"What do the ureters carry, and where do they carry it to?",     a:"They carry the urine to the bladder."},
+    {part:"Bladder",  by:"Maria Clara", q:"Where does all the urine end up before it is eliminated?",      a:"In the bladder."},
+    {part:"Urethra",  by:"Guadalupe",   q:"Which organ leads the urine from the bladder to outside the body?", a:"The urethra."}
   ];
+  var SPARE = [
+    {part:"Kidneys",  by:"Nicolas",     q:"How many kidneys does the body have?",                          a:"Two."},
+    {part:"Ureters",  by:"Thomas",      q:"How many ureters are there, and which organ do they come out of?", a:"Two, and they come out of the kidneys."},
+    {part:"Bladder",  by:"Maria Clara", q:"Does the bladder make the urine, or does it store the urine?",  a:"It stores it. The kidneys are the ones that make it."},
+    {part:"Urethra",  by:"Guadalupe",   q:"Is the urethra an internal organ or an external organ?",        a:"It is an external organ."}
+  ];
+  var TOTAL_GIFTS = 4;
 
   var ROSTER = [
     "Estudiante 1",
@@ -470,15 +491,20 @@
 
   var rot = -7;
   var spinning = false;
-  var deck = [];
   var spinMs = 20000;
+
+  var deck = [];
+  var giftsLeft = TOTAL_GIFTS;
+  var pending = null;
+  var over = false;
 
   var canvas = document.getElementById("wheel");
   var ctx = canvas.getContext("2d");
   var spinBtn = document.getElementById("spin");
   var whoEl = document.getElementById("who");
   var turnEl = document.getElementById("turn");
-  var tallyEl = document.getElementById("tally-num");
+  var giftsEl = document.getElementById("gifts-num");
+  var qsEl = document.getElementById("qs-num");
   var namesInput = document.getElementById("names-input");
   var card = document.getElementById("card");
   var emptyEl = document.getElementById("empty");
@@ -487,6 +513,9 @@
   var qText = document.getElementById("q-text");
   var aBy = document.getElementById("a-by");
   var aText = document.getElementById("a-text");
+  var judge = document.getElementById("judge");
+  var winnersBox = document.getElementById("winners");
+  var winnersList = document.getElementById("winners-list");
 
   /* ---------- storage (best effort) ---------- */
   function load(){
@@ -514,12 +543,9 @@
     }
     return a;
   }
-  function refillDeck(){
-    deck = shuffle(BANK.map(function(_, i){ return i; }));
-  }
-  function nextQuestion(){
-    if(!deck.length) refillDeck();
-    return BANK[deck.shift()];
+  function buildDeck(){
+    // Every presenter asks once before any spare question comes out.
+    deck = shuffle(MAIN.slice()).concat(shuffle(SPARE.slice()));
   }
 
   /* ---------- wheel drawing ---------- */
@@ -587,7 +613,7 @@
      so it needs no recording and no network.                             */
   var music = (function(){
     var AC = window.AudioContext || window.webkitAudioContext;
-    var ctx2 = null, master = null, noise = null, timer = null;
+    var ac = null, master = null, noise = null, timer = null;
     var on = true;
 
     var TICK = 0.135;
@@ -603,20 +629,20 @@
     function hz(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
 
     function boot(){
-      if(ctx2 || !AC) return ctx2;
-      ctx2 = new AC();
-      master = ctx2.createGain();
+      if(ac || !AC) return ac;
+      ac = new AC();
+      master = ac.createGain();
       master.gain.value = 0.55;
-      master.connect(ctx2.destination);
-      var len = Math.floor(ctx2.sampleRate * 0.09);
-      noise = ctx2.createBuffer(1, len, ctx2.sampleRate);
+      master.connect(ac.destination);
+      var len = Math.floor(ac.sampleRate * 0.09);
+      noise = ac.createBuffer(1, len, ac.sampleRate);
       var data = noise.getChannelData(0);
       for(var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 7);
-      return ctx2;
+      return ac;
     }
 
     function tone(at, f, dur, type, vol){
-      var o = ctx2.createOscillator(), g = ctx2.createGain();
+      var o = ac.createOscillator(), g = ac.createGain();
       o.type = type;
       o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, at);
@@ -627,7 +653,7 @@
     }
 
     function hoof(at, vol){
-      var s = ctx2.createBufferSource(), g = ctx2.createGain();
+      var s = ac.createBufferSource(), g = ac.createGain();
       s.buffer = noise;
       g.gain.value = vol;
       s.connect(g); g.connect(master);
@@ -635,7 +661,7 @@
     }
 
     function pump(){
-      while(nextAt < ctx2.currentTime + 0.4 && nextAt < endAt){
+      while(nextAt < ac.currentTime + 0.4 && nextAt < endAt){
         var beats = RHYTHM[step];
         var note = PHRASES[phrase][step];
         var span = beats * TICK;
@@ -651,7 +677,7 @@
         step++;
         if(step >= RHYTHM.length){ step = 0; phrase = (phrase + 1) % PHRASES.length; }
       }
-      if(ctx2.currentTime > endAt + 0.5) halt();
+      if(ac.currentTime > endAt + 0.5) halt();
     }
 
     function halt(){
@@ -662,42 +688,36 @@
       toggle: function(){ on = !on; if(!on) this.stop(); return on; },
       start: function(ms){
         if(!on || !boot()) return;
-        if(ctx2.state === "suspended") ctx2.resume();
+        if(ac.state === "suspended") ac.resume();
         halt();
-        master.gain.cancelScheduledValues(ctx2.currentTime);
-        master.gain.setValueAtTime(0.55, ctx2.currentTime);
-        nextAt = ctx2.currentTime + 0.08;
+        master.gain.cancelScheduledValues(ac.currentTime);
+        master.gain.setValueAtTime(0.55, ac.currentTime);
+        nextAt = ac.currentTime + 0.08;
         endAt = nextAt + ms / 1000;
         phrase = 0; step = 0;
         pump();
         timer = setInterval(pump, 45);
       },
-      fanfare: function(){
-        if(!on || !ctx2) return;
-        var at = ctx2.currentTime + 0.05;
-        [72, 76, 79, 84].forEach(function(n, i){
-          tone(at + i * 0.075, hz(n), 0.75, "square", 0.17);
-        });
+      chord: function(notes, vol){
+        if(!on || !ac) return;
+        var at = ac.currentTime + 0.05;
+        notes.forEach(function(n, i){ tone(at + i * 0.075, hz(n), 0.8, "square", vol); });
       },
       stop: function(){
         halt();
-        if(!ctx2) return;
-        master.gain.cancelScheduledValues(ctx2.currentTime);
-        master.gain.setValueAtTime(master.gain.value, ctx2.currentTime);
-        master.gain.exponentialRampToValueAtTime(0.0001, ctx2.currentTime + 0.25);
+        if(!ac) return;
+        master.gain.cancelScheduledValues(ac.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ac.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.25);
       }
     };
   })();
 
-  /* ---------- spin ---------- */
-  function remaining(){
-    return used.reduce(function(acc, u){ return acc + (u ? 0 : 1); }, 0);
-  }
-  function updateTally(){
-    var left = remaining();
-    tallyEl.textContent = left;
-    spinBtn.disabled = spinning || left === 0;
-    if(left === 0 && !spinning) spinBtn.textContent = "Everyone has had a turn";
+  /* ---------- scoreboard ---------- */
+  function updateScores(){
+    giftsEl.textContent = giftsLeft;
+    qsEl.textContent = deck.length;
+    spinBtn.disabled = spinning || over || pending !== null || deck.length === 0;
   }
 
   /* Trapezoidal speed: accelerate, hold, then brake into the target.
@@ -712,7 +732,7 @@
   }
 
   function spin(){
-    if(spinning) return;
+    if(spinning || over || pending !== null || !deck.length) return;
     var pool = [];
     for(var i = 0; i < N; i++) if(!used[i]) pool.push(i);
     if(!pool.length) return;
@@ -735,9 +755,11 @@
 
     spinning = true;
     spinBtn.disabled = true;
+    turnEl.classList.remove("over");
     turnEl.classList.add("idle");
     whoEl.textContent = "Spinning…";
     card.hidden = true;
+    judge.hidden = true;
     emptyEl.hidden = false;
     emptyEl.textContent = "Picking a student…";
     music.start(duration);
@@ -759,7 +781,7 @@
         spinning = false;
         spinBtn.textContent = "Spin the wheel";
         music.stop();
-        music.fanfare();
+        music.chord([72, 76, 79, 84], 0.17);
         announce(pick);
       }
     }
@@ -769,15 +791,13 @@
   function announce(index){
     used[index] = true;
     render();
+    var item = deck.shift();
+    pending = {student: names[index], item: item};
+
     turnEl.classList.remove("idle");
     turnEl.querySelector(".label").textContent = "Turn · No. " + (index + 1) + " on the list";
     whoEl.textContent = names[index];
-    showQuestion(nextQuestion());
-    updateTally();
-    turnEl.scrollIntoView({behavior: "smooth", block: "nearest"});
-  }
 
-  function showQuestion(item){
     card.classList.remove("flipped");
     qPart.textContent = item.part;
     qBy.textContent = "asked by " + item.by;
@@ -786,18 +806,93 @@
     aText.textContent = item.a;
     emptyEl.hidden = true;
     card.hidden = false;
-  }
+    judge.hidden = true;
 
-  function clearQuestion(message){
-    card.hidden = true;
-    card.classList.remove("flipped");
-    emptyEl.hidden = false;
-    emptyEl.textContent = message;
+    updateScores();
+    turnEl.scrollIntoView({behavior: "smooth", block: "nearest"});
   }
 
   function flip(){
     if(card.hidden) return;
+    var showingAnswer = !card.classList.contains("flipped");
     card.classList.toggle("flipped");
+    // The teacher decides only once the answer is on screen.
+    if(showingAnswer && pending) judge.hidden = false;
+  }
+
+  function settle(correct){
+    if(!pending) return;
+    if(correct){
+      giftsLeft--;
+      addWinner(pending.student, pending.item.part);
+      music.chord([76, 79, 84, 88], 0.16);
+    }
+    pending = null;
+    judge.hidden = true;
+    card.hidden = true;
+    card.classList.remove("flipped");
+    emptyEl.hidden = false;
+
+    if(giftsLeft === 0){
+      finish("All four gifts have been handed out. Game over.");
+    }else if(deck.length === 0){
+      finish("No questions left. " + giftsLeft + (giftsLeft === 1 ? " gift was" : " gifts were") + " not handed out.");
+    }else{
+      emptyEl.textContent = correct
+        ? "Gift given. Spin again for the next question."
+        : "No gift this time. Spin again for the next question.";
+    }
+    updateScores();
+  }
+
+  function addWinner(student, part){
+    var li = document.createElement("li");
+    var gift = document.createElement("span");
+    gift.className = "gift";
+    gift.textContent = "🎁";
+    var name = document.createElement("span");
+    name.className = "name";
+    name.textContent = student;
+    var tag = document.createElement("span");
+    tag.className = "part";
+    tag.textContent = part;
+    li.appendChild(gift);
+    li.appendChild(name);
+    li.appendChild(tag);
+    winnersList.appendChild(li);
+    winnersBox.hidden = false;
+  }
+
+  function finish(message){
+    over = true;
+    turnEl.classList.remove("idle");
+    turnEl.classList.add("over");
+    turnEl.querySelector(".label").textContent = "Game over";
+    whoEl.textContent = message;
+    emptyEl.textContent = "Press “Start a new game” to play again.";
+    spinBtn.textContent = "Game over";
+  }
+
+  function newGame(){
+    used = new Array(N).fill(false);
+    buildDeck();
+    giftsLeft = TOTAL_GIFTS;
+    pending = null;
+    over = false;
+    winnersList.textContent = "";
+    winnersBox.hidden = true;
+    card.hidden = true;
+    card.classList.remove("flipped");
+    judge.hidden = true;
+    emptyEl.hidden = false;
+    emptyEl.textContent = "No question yet. Spin the wheel to get one.";
+    turnEl.classList.remove("over");
+    turnEl.classList.add("idle");
+    turnEl.querySelector(".label").textContent = "Turn";
+    whoEl.textContent = "Spin the wheel to pick the first student.";
+    spinBtn.textContent = "Spin the wheel";
+    render();
+    updateScores();
   }
 
   /* ---------- wiring ---------- */
@@ -811,6 +906,9 @@
   card.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); }
   });
+
+  document.getElementById("judge-yes").addEventListener("click", function(){ settle(true); });
+  document.getElementById("judge-no").addEventListener("click", function(){ settle(false); });
 
   Array.prototype.forEach.call(document.querySelectorAll(".dur"), function(b){
     b.addEventListener("click", function(){
@@ -832,34 +930,13 @@
     soundBtn.textContent = on ? "♪ Music" : "♪ Muted";
   });
 
-  document.getElementById("reset").addEventListener("click", function(){
-    used = new Array(N).fill(false);
-    refillDeck();
-    turnEl.classList.add("idle");
-    turnEl.querySelector(".label").textContent = "Turn";
-    whoEl.textContent = "Spin the wheel to pick the first student.";
-    clearQuestion("No question yet. Spin the wheel to get one.");
-    spinBtn.textContent = "Spin the wheel";
-    render();
-    updateTally();
-  });
-
-  document.getElementById("shuffle-qs").addEventListener("click", function(){
-    refillDeck();
-    if(!card.hidden) showQuestion(nextQuestion());
-  });
+  document.getElementById("reset").addEventListener("click", newGame);
 
   document.getElementById("apply-names").addEventListener("click", function(){
     setRoster(normalize(namesInput.value.split("\n")));
     namesInput.value = names.join("\n");
     save();
-    turnEl.classList.add("idle");
-    turnEl.querySelector(".label").textContent = "Turn";
-    whoEl.textContent = "Spin the wheel to pick the first student.";
-    clearQuestion("No question yet. Spin the wheel to get one.");
-    spinBtn.textContent = "Spin the wheel";
-    render();
-    updateTally();
+    newGame();
   });
 
   window.addEventListener("resize", render);
@@ -868,9 +945,9 @@
 
   load();
   namesInput.value = names.join("\n");
-  refillDeck();
+  buildDeck();
   render();
-  updateTally();
+  updateScores();
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
 
   window.__ruleta = {
