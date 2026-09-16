@@ -308,7 +308,7 @@
            placeholder="Class password" aria-label="Class password" required>
     <button type="submit" id="gate-go">Enter</button>
     <p class="gate-error" id="gate-error" hidden>Wrong password. Please try again.</p>
-    <p class="gate-note">The student list travels encrypted inside this page. Without the password it cannot be read.</p>
+    <p class="gate-note">The student list travels encrypted inside this page. Without the password it cannot be read.<br>Type it once and this device stays unlocked. Use &ldquo;Lock this device&rdquo; to undo that.</p>
   </form>
 </div>
 
@@ -348,6 +348,7 @@
       </div>
       <div class="toolbar">
         <button class="ghost" id="reset">Start a new game</button>
+        <button class="ghost" id="lock">Lock this device</button>
       </div>
       <details class="names">
         <summary>Edit the student list</summary>
@@ -992,10 +993,22 @@
       .then(function(buf){ return JSON.parse(new TextDecoder().decode(buf)); });
   }
 
+  // The password is kept in this browser only, so the teacher types it once.
+  // It never travels anywhere: the copy on the server stays encrypted either way.
+  var STORE = "ruleta-excretor-pass-v1";
+  function remember(pw){ try{ localStorage.setItem(STORE, pw); }catch(e){} }
+  function forget(){ try{ localStorage.removeItem(STORE); }catch(e){} }
+  function recall(){ try{ return localStorage.getItem(STORE); }catch(e){ return null; } }
+
   function reveal(list){
     window.__ruleta.load(list);
     document.body.classList.remove("locked");
-    gate.parentNode.removeChild(gate);
+    if(gate.parentNode) gate.parentNode.removeChild(gate);
+    var lockBtn = document.getElementById("lock");
+    if(lockBtn) lockBtn.addEventListener("click", function(){
+      forget();
+      location.reload();
+    });
   }
 
   function wrongPassword(){
@@ -1022,10 +1035,32 @@
     err.hidden = true;
     btn.disabled = true;
     btn.textContent = "Checking\u2026";
-    unlock(pass.value).then(reveal, wrongPassword).catch(showBug);
+    var typed = pass.value;
+    unlock(typed).then(function(list){
+      remember(typed);
+      reveal(list);
+    }, wrongPassword).catch(showBug);
   });
 
-  pass.focus();
+  // Already unlocked on this device: open straight into the game.
+  var saved = recall();
+  if(saved){
+    btn.disabled = true;
+    pass.disabled = true;
+    btn.textContent = "Unlocking\u2026";
+    unlock(saved).then(reveal, function(){
+      // The password was changed since this device was unlocked.
+      forget();
+      pass.disabled = false;
+      btn.disabled = false;
+      btn.textContent = "Enter";
+      err.textContent = "The class password has changed. Please enter the new one.";
+      err.hidden = false;
+      pass.focus();
+    }).catch(showBug);
+  }else{
+    pass.focus();
+  }
 })();
 </script>
 
