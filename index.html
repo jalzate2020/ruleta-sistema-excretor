@@ -289,9 +289,9 @@
       </div>
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Duración del giro">
-          <button class="ghost dur" id="dur-15" data-ms="15000">15 s</button>
-          <button class="ghost dur" id="dur-30" data-ms="30000">30 s</button>
-          <button class="ghost dur is-on" id="dur-60" data-ms="60000" aria-pressed="true">1 min</button>
+          <button class="ghost dur" id="dur-10" data-ms="10000" aria-pressed="false">10 s</button>
+          <button class="ghost dur is-on" id="dur-20" data-ms="20000" aria-pressed="true">20 s</button>
+          <button class="ghost dur" id="dur-60" data-ms="60000" aria-pressed="false">1 min</button>
         </div>
         <button class="ghost" id="sound" aria-pressed="true">♪ Música</button>
       </div>
@@ -440,7 +440,7 @@
   var rot = -7;
   var spinning = false;
   var deck = [];
-  var spinMs = 60000;
+  var spinMs = 20000;
 
   var canvas = document.getElementById("wheel");
   var ctx = canvas.getContext("2d");
